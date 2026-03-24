@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head><meta charset="utf-8" /></head>
+  <body>
+    <!--
+      This file exists solely so Netlify's build bot can detect and register
+      the contact form at build time. It is not linked or visible to users.
+      The actual form submission is handled via fetch in ContactForm.tsx.
+    -->
+    <form name="contact" data-netlify="true" hidden>
+      <input type="hidden" name="form-name" value="contact" />
+      <input type="text"   name="name" />
+      <input type="email"  name="email" />
+      <input type="text"   name="company" />
+      <select              name="reason"></select>
+      <textarea            name="message"></textarea>
+    </form>
+  </body>
+</html>
