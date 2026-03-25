@@ -31,7 +31,7 @@ export default function ContactForm() {
         ...form,
       }).toString();
 
-      const res = await fetch("/", {
+      const res = await fetch("/netlify-forms.html", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body,
