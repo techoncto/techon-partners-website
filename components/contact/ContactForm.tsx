@@ -11,9 +11,23 @@ const contactReasons = [
   "Something Else",
 ];
 
+type FormState = {
+  name: string;
+  email: string;
+  company: string;
+  reason: string;
+  message: string;
+};
+
+type FormErrors = Partial<Record<keyof FormState | "recaptcha", string>>;
+
+const inputClass =
+  "w-full px-4 py-2.5 rounded-xl border bg-white text-navy-800 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow";
+
 export default function ContactForm() {
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
-  const [form, setForm] = useState({
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [form, setForm] = useState<FormState>({
     name: "",
     email: "",
     company: "",
@@ -21,13 +35,46 @@ export default function ContactForm() {
     message: "",
   });
 
+  const validate = (): FormErrors => {
+    const e: FormErrors = {};
+
+    if (!form.name.trim()) e.name = "Full name is required.";
+    if (!form.email.trim()) {
+      e.email = "Work email is required.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      e.email = "Enter a valid email address.";
+    }
+    if (!form.company.trim()) e.company = "Company name is required.";
+    if (!form.reason) e.reason = "Please select a service area.";
+    if (!form.message.trim()) e.message = "Please describe your situation.";
+
+    const recaptchaEl = document.querySelector<HTMLTextAreaElement>(
+      'textarea[name="g-recaptcha-response"]'
+    );
+    if (!recaptchaEl?.value) e.recaptcha = "Please complete the reCAPTCHA verification.";
+
+    return e;
+  };
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+
+    setErrors({});
     setStatus("submitting");
 
     try {
+      const recaptchaEl = document.querySelector<HTMLTextAreaElement>(
+        'textarea[name="g-recaptcha-response"]'
+      );
       const body = new URLSearchParams({
         "form-name": "contact",
+        "g-recaptcha-response": recaptchaEl?.value ?? "",
         ...form,
       }).toString();
 
@@ -46,7 +93,11 @@ export default function ContactForm() {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    if (errors[name as keyof FormState]) {
+      setErrors((prev) => ({ ...prev, [name]: undefined }));
+    }
   };
 
   if (status === "error") {
@@ -61,7 +112,11 @@ export default function ContactForm() {
             strokeWidth="2"
             aria-hidden
           >
-            <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </div>
         <h2 className="text-navy-800 font-bold text-xl mb-2">Something went wrong</h2>
@@ -74,7 +129,7 @@ export default function ContactForm() {
         </p>
         <button
           onClick={() => setStatus("idle")}
-          className="px-6 py-2.5 rounded-xl bg-navy-900 text-white text-sm font-medium hover:bg-navy-700 transition-colors"
+          className="px-6 py-2.5 rounded-xl bg-navy-900 text-white text-sm font-medium hover:bg-navy-700 transition-colors cursor-pointer"
         >
           Try Again
         </button>
@@ -110,11 +165,13 @@ export default function ContactForm() {
       onSubmit={handleSubmit}
       name="contact"
       data-netlify="true"
+      data-netlify-recaptcha="true"
       className="space-y-5"
       aria-label="Contact form"
       noValidate
     >
       <input type="hidden" name="form-name" value="contact" />
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-navy-700 mb-1.5">
@@ -129,8 +186,13 @@ export default function ContactForm() {
             value={form.name}
             onChange={handleChange}
             placeholder="Jane Smith"
-            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-navy-800 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+            aria-describedby={errors.name ? "name-error" : undefined}
+            aria-invalid={!!errors.name}
+            className={`${inputClass} ${errors.name ? "border-red-400" : "border-slate-200"}`}
           />
+          {errors.name && (
+            <p id="name-error" className="mt-1.5 text-xs text-red-500">{errors.name}</p>
+          )}
         </div>
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-navy-700 mb-1.5">
@@ -145,37 +207,51 @@ export default function ContactForm() {
             value={form.email}
             onChange={handleChange}
             placeholder="jane@company.com"
-            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-navy-800 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+            aria-describedby={errors.email ? "email-error" : undefined}
+            aria-invalid={!!errors.email}
+            className={`${inputClass} ${errors.email ? "border-red-400" : "border-slate-200"}`}
           />
+          {errors.email && (
+            <p id="email-error" className="mt-1.5 text-xs text-red-500">{errors.email}</p>
+          )}
         </div>
       </div>
 
       <div>
         <label htmlFor="company" className="block text-sm font-medium text-navy-700 mb-1.5">
-          Company Name
+          Company Name <span className="text-red-500" aria-hidden>*</span>
         </label>
         <input
           id="company"
           name="company"
           type="text"
+          required
           autoComplete="organization"
           value={form.company}
           onChange={handleChange}
           placeholder="Acme Inc."
-          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-navy-800 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+          aria-describedby={errors.company ? "company-error" : undefined}
+          aria-invalid={!!errors.company}
+          className={`${inputClass} ${errors.company ? "border-red-400" : "border-slate-200"}`}
         />
+        {errors.company && (
+          <p id="company-error" className="mt-1.5 text-xs text-red-500">{errors.company}</p>
+        )}
       </div>
 
       <div>
         <label htmlFor="reason" className="block text-sm font-medium text-navy-700 mb-1.5">
-          How Can I Help?
+          How Can I Help? <span className="text-red-500" aria-hidden>*</span>
         </label>
         <select
           id="reason"
           name="reason"
+          required
           value={form.reason}
           onChange={handleChange}
-          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-navy-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+          aria-describedby={errors.reason ? "reason-error" : undefined}
+          aria-invalid={!!errors.reason}
+          className={`${inputClass} ${errors.reason ? "border-red-400" : "border-slate-200"}`}
         >
           <option value="">Select a service area...</option>
           {contactReasons.map((r) => (
@@ -184,6 +260,9 @@ export default function ContactForm() {
             </option>
           ))}
         </select>
+        {errors.reason && (
+          <p id="reason-error" className="mt-1.5 text-xs text-red-500">{errors.reason}</p>
+        )}
       </div>
 
       <div>
@@ -198,8 +277,21 @@ export default function ContactForm() {
           value={form.message}
           onChange={handleChange}
           placeholder="What challenges are you facing? What are you hoping to achieve? The more context you share, the more useful our first call will be."
-          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-navy-800 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow resize-y min-h-[120px]"
+          aria-describedby={errors.message ? "message-error" : undefined}
+          aria-invalid={!!errors.message}
+          className={`${inputClass} ${errors.message ? "border-red-400" : "border-slate-200"} resize-y min-h-[120px]`}
         />
+        {errors.message && (
+          <p id="message-error" className="mt-1.5 text-xs text-red-500">{errors.message}</p>
+        )}
+      </div>
+
+      {/* Netlify reCAPTCHA widget — injected automatically by Netlify's snippet */}
+      <div>
+        <div data-netlify-recaptcha="true" />
+        {errors.recaptcha && (
+          <p className="mt-1.5 text-xs text-red-500">{errors.recaptcha}</p>
+        )}
       </div>
 
       <button
