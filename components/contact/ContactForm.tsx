@@ -50,7 +50,9 @@ export default function ContactForm() {
     if (!form.reason) e.reason = "Please select a service area.";
     if (!form.message.trim()) e.message = "Please describe your situation.";
 
-    if (!recaptchaRef.current?.getValue()) e.recaptcha = "Please complete the reCAPTCHA verification.";
+    if (process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY && !recaptchaRef.current?.getValue()) {
+      e.recaptcha = "Please complete the reCAPTCHA verification.";
+    }
 
     return e;
   };
@@ -281,18 +283,20 @@ export default function ContactForm() {
         )}
       </div>
 
-      <div>
-        <ReCAPTCHA
-          ref={recaptchaRef}
-          sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
-          onChange={() => {
-            if (errors.recaptcha) setErrors((prev) => ({ ...prev, recaptcha: undefined }));
-          }}
-        />
-        {errors.recaptcha && (
-          <p className="mt-1.5 text-xs text-red-500">{errors.recaptcha}</p>
-        )}
-      </div>
+      {process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY && (
+        <div>
+          <ReCAPTCHA
+            ref={recaptchaRef}
+            sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
+            onChange={() => {
+              if (errors.recaptcha) setErrors((prev) => ({ ...prev, recaptcha: undefined }));
+            }}
+          />
+          {errors.recaptcha && (
+            <p className="mt-1.5 text-xs text-red-500">{errors.recaptcha}</p>
+          )}
+        </div>
+      )}
 
       <button
         type="submit"
