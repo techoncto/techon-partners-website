@@ -72,7 +72,6 @@ export default function ContactForm() {
     try {
       const body = new URLSearchParams({
         "form-name": "contact",
-        "g-recaptcha-response": recaptchaRef.current?.getValue() ?? "",
         ...form,
       }).toString();
 
