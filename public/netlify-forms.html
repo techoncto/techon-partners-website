@@ -6,15 +6,16 @@
       This file exists solely so Netlify's build bot can detect and register
       the contact form at build time. It is not linked or visible to users.
       The actual form submission is handled via fetch in ContactForm.tsx.
+      reCAPTCHA is handled via react-google-recaptcha (Google v2).
     -->
-    <form name="contact" data-netlify="true" data-netlify-recaptcha="true" hidden>
+    <form name="contact" data-netlify="true" hidden>
       <input type="hidden" name="form-name" value="contact" />
       <input type="text"   name="name" />
       <input type="email"  name="email" />
       <input type="text"   name="company" />
       <select              name="reason"></select>
       <textarea            name="message"></textarea>
-      <div data-netlify-recaptcha="true"></div>
+      <input type="text"   name="g-recaptcha-response" />
     </form>
   </body>
 </html>

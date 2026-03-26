@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
+import ReCAPTCHA from "react-google-recaptcha";
 
 const contactReasons = [
   "Technology Strategy",
@@ -25,6 +26,7 @@ const inputClass =
   "w-full px-4 py-2.5 rounded-xl border bg-white text-navy-800 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow";
 
 export default function ContactForm() {
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [errors, setErrors] = useState<FormErrors>({});
   const [form, setForm] = useState<FormState>({
@@ -48,10 +50,7 @@ export default function ContactForm() {
     if (!form.reason) e.reason = "Please select a service area.";
     if (!form.message.trim()) e.message = "Please describe your situation.";
 
-    const recaptchaEl = document.querySelector<HTMLTextAreaElement>(
-      'textarea[name="g-recaptcha-response"]'
-    );
-    if (!recaptchaEl?.value) e.recaptcha = "Please complete the reCAPTCHA verification.";
+    if (!recaptchaRef.current?.getValue()) e.recaptcha = "Please complete the reCAPTCHA verification.";
 
     return e;
   };
@@ -69,12 +68,9 @@ export default function ContactForm() {
     setStatus("submitting");
 
     try {
-      const recaptchaEl = document.querySelector<HTMLTextAreaElement>(
-        'textarea[name="g-recaptcha-response"]'
-      );
       const body = new URLSearchParams({
         "form-name": "contact",
-        "g-recaptcha-response": recaptchaEl?.value ?? "",
+        "g-recaptcha-response": recaptchaRef.current?.getValue() ?? "",
         ...form,
       }).toString();
 
@@ -165,7 +161,6 @@ export default function ContactForm() {
       onSubmit={handleSubmit}
       name="contact"
       data-netlify="true"
-      data-netlify-recaptcha="true"
       className="space-y-5"
       aria-label="Contact form"
       noValidate
@@ -286,9 +281,14 @@ export default function ContactForm() {
         )}
       </div>
 
-      {/* Netlify reCAPTCHA widget — injected automatically by Netlify's snippet */}
       <div>
-        <div data-netlify-recaptcha="true" />
+        <ReCAPTCHA
+          ref={recaptchaRef}
+          sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+          onChange={() => {
+            if (errors.recaptcha) setErrors((prev) => ({ ...prev, recaptcha: undefined }));
+          }}
+        />
         {errors.recaptcha && (
           <p className="mt-1.5 text-xs text-red-500">{errors.recaptcha}</p>
         )}
