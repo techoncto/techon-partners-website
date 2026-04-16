@@ -12,12 +12,12 @@ const capabilities = [
   {
     title: "Systems & Architecture Review",
     description:
-      "Assess every layer of the systems your operations depend on — ERP, integrations, infrastructure, data flows. Surface what's fragile, what's accumulating debt, and what's likely to break under continued growth.",
+      "Assess every layer of the systems your operations depend on — core platforms, integrations, infrastructure, and data flows. Surface what's fragile, what's accumulating debt, and what's likely to break under continued growth.",
   },
   {
     title: "Integration & Automation",
     description:
-      "Build reliable connections between your operational systems — ERP, vendor platforms, internal tools, and data pipelines. Replace manual handoffs with automated processes that hold up under volume.",
+      "Build reliable connections between your operational systems — core platforms, vendors, internal tools, and data pipelines. Replace manual handoffs with automated processes that hold up under volume.",
   },
   {
     title: "Team Building",
@@ -62,8 +62,8 @@ export default function WhatWeDo() {
             <div className="mt-10 grid grid-cols-3 gap-4">
               {[
                 { stat: "10+", label: "Years in engineering leadership" },
-                { stat: "Ops", label: "Systems & platform delivery" },
-                { stat: "Scale", label: "Systems under real-world load" },
+                { stat: "Systems", label: "Operational depth and delivery" },
+                { stat: "Proven", label: "Under real-world complexity" },
               ].map(({ stat, label }) => (
                 <div key={label} className="p-4 rounded-xl bg-slate-50 border border-slate-200">
                   <div className="text-2xl font-bold text-blue-600 mb-0.5">{stat}</div>

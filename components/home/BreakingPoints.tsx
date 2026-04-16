@@ -22,7 +22,7 @@ const breakingPoints = [
   {
     title: "Complex integrations between systems and vendors",
     description:
-      "ERP systems, third-party platforms, data feeds, and vendor APIs are tightly coupled in fragile ways. When one changes, everything downstream is at risk — and nobody has a full map of the dependencies.",
+      "Core systems, third-party platforms, data feeds, and vendor APIs are tightly coupled in fragile ways. When one changes, everything downstream is at risk — and nobody has a full map of the dependencies.",
   },
   {
     title: "Technical debt that's impacting business operations",

@@ -3,12 +3,12 @@ import Link from "next/link";
 
 const credentials = [
   { stat: "10+", label: "Years in engineering leadership" },
-  { stat: "Ops", label: "Systems & platform delivery" },
-  { stat: "Scale", label: "Systems under real-world load" },
+  { stat: "Systems", label: "Operational depth and delivery" },
+  { stat: "Proven", label: "Under real-world complexity" },
 ];
 
 const expertise = [
-  "ERP implementation and operational platforms",
+  "Operational systems & platform delivery",
   "System integration architecture",
   "Workflow automation and process modernization",
   "Engineering org design and scaling",
@@ -116,8 +116,8 @@ export default function AboutPreview() {
             </h2>
             <p className="text-slate-500 leading-relaxed mb-5">
               Isaac Drezdner has spent over a decade leading engineering teams through the
-              work that directly determines how operations run — ERP implementations, complex
-              system integrations, workflow automation, and scaling platforms under real
+              work that directly determines how operations run — core system implementations,
+              complex integrations, workflow automation, and scaling platforms under real
               business load. These aren&apos;t areas he&apos;s advised on from the outside.
               They&apos;re engagements he&apos;s led directly, with accountability for how
               they turn out.

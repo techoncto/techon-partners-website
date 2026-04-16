@@ -14,7 +14,7 @@ const ourFocus = [
 
 const domains = [
   {
-    title: "ERP & Core Operational Platforms",
+    title: "Core Operational Platforms",
     description:
       "Experience with the systems running finance, procurement, fulfillment, and business operations — and the work of adapting them to how a scaling company actually operates.",
     icon: (

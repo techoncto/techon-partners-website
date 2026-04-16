@@ -54,7 +54,7 @@ export default function Hero() {
 
         {/* Subtext */}
         <p className="mt-7 text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-light">
-          Techon Partners embeds senior technology leadership directly into your company —
+          Techon Partners provides embedded CTO-level leadership inside your company —
           solving the operational, integration, and system-level problems that emerge when
           growth outpaces the infrastructure behind it.
         </p>
