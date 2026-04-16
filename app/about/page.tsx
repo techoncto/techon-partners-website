@@ -50,7 +50,7 @@ const highlights = [
   {
     title: "Workflow Automation",
     description:
-      "Delivered automation programmes that replaced significant manual operational overhead — reconciliation, exception handling, data entry, and reporting — with scalable automated processes.",
+      "Delivered automation programs that replaced significant manual operational overhead — reconciliation, exception handling, data entry, and reporting — with scalable automated processes.",
   },
   {
     title: "Platform Scaling Under Load",
@@ -65,7 +65,7 @@ const highlights = [
   {
     title: "Platform & Systems Modernization",
     description:
-      "Led cloud migration programmes, infrastructure rebuilds, and operational platform re-architectures — designed and executed to avoid disrupting business continuity during transition.",
+      "Led cloud migration programs, infrastructure rebuilds, and operational platform re-architectures — designed and executed to avoid disrupting business continuity during transition.",
   },
 ];
 
@@ -314,7 +314,7 @@ export default function AboutPage() {
                 Isaac Drezdner has spent over a decade in engineering leadership roles
                 that sit at the intersection of technology and operations — building
                 ERP-integrated platforms, designing integration architectures between
-                systems, leading automation programmes, and scaling the engineering
+                systems, leading automation programs, and scaling the engineering
                 organizations behind them.
               </p>
               <p className="text-slate-600 leading-relaxed mb-5">

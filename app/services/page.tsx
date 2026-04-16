@@ -75,7 +75,7 @@ const serviceAreas = [
     number: "05",
     title: "Platform & Systems Modernization",
     description:
-      "Legacy platforms constrain growth and increase operational risk. Techon Partners has led operational system and platform modernisation programmes — from cloud migrations and integration redesigns to full architecture transitions — and understands how to execute them without disrupting business continuity.",
+      "Legacy platforms constrain growth and increase operational risk. Techon Partners has led operational system and platform modernization programs — from cloud migrations and integration redesigns to full architecture transitions — and understands how to execute them without disrupting business continuity.",
     context:
       "Operational platform migration, systems re-architecture, integration modernisation, and cloud infrastructure adoption.",
     icon: (
@@ -160,7 +160,7 @@ export default function ServicesPage() {
             <p className="text-slate-400 text-lg leading-relaxed max-w-2xl">
               Techon Partners provides senior technology leadership on a flexible, embedded
               basis. The scope of each engagement is shaped by what the company actually
-              needs — not by a package or a programme.
+              needs — not by a package or a program.
             </p>
           </div>
         </div>
@@ -185,7 +185,7 @@ export default function ServicesPage() {
               <p className="text-slate-500 leading-relaxed">
                 Every engagement is led personally by our Founder &amp; CTO. The scope,
                 pace, and focus of the work evolve as your company does. There are no fixed
-                modules, no standard deliverables, and no programmes to complete.
+                modules, no standard deliverables, and no programs to complete.
               </p>
             </div>
             <div className="grid grid-cols-1 gap-3">
