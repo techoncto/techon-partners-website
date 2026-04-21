@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     template: "%s | Techon Partners",
   },
   description:
-    "Techon Partners delivers strategic technology leadership for growing companies — fractional CTO services including engineering strategy, team building, and architecture advisory.",
+    "Techon Partners delivers strategic technology leadership for growing companies: fractional CTO services including engineering strategy, team building, and architecture advisory.",
   keywords: [
     "fractional CTO",
     "fractional chief technology officer",
@@ -39,13 +39,13 @@ export const metadata: Metadata = {
     siteName: "Techon Partners",
     title: "Techon Partners | Strategic Technology Leadership",
     description:
-      "Techon Partners delivers strategic technology leadership for growing companies — fractional CTO services including engineering strategy, team building, and architecture advisory.",
+      "Techon Partners delivers strategic technology leadership for growing companies: fractional CTO services including engineering strategy, team building, and architecture advisory.",
   },
   twitter: {
     card: "summary_large_image",
     title: "Techon Partners | Strategic Technology Leadership",
     description:
-      "Strategic technology leadership for growing companies — fractional CTO services without the full-time cost.",
+      "Strategic technology leadership for growing companies. Fractional CTO services without the full-time cost.",
   },
   robots: {
     index: true,

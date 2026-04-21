@@ -3,9 +3,9 @@ import Button from "@/components/ui/Button";
 import CTABanner from "@/components/home/CTABanner";
 
 export const metadata: Metadata = {
-  title: "Services",
+  title: "Services | Techon Partners",
   description:
-    "Techon Partners provides fractional CTO leadership across technology strategy, engineering leadership, systems and integration architecture, execution and operational flow, platform modernization, and executive advisory.",
+    "Fractional CTO services from Techon Partners: technology strategy, systems and architecture, and execution leadership for growth-stage companies.",
   alternates: {
     canonical: "https://techonpartners.com/services",
   },
@@ -16,12 +16,9 @@ export const metadata: Metadata = {
 const serviceAreas = [
   {
     id: "strategy",
-    number: "01",
-    title: "Technology & Systems Strategy",
+    title: "Technology Strategy",
     description:
-      "Most growing companies accumulate technology decisions rather than making them deliberately. Techon Partners works with leadership to define a clear direction for systems and technology investment — one grounded in how the business operates, not engineering preference.",
-    context:
-      "Systems and investment roadmapping, operational risk assessment, build vs. buy vs. integrate decisions, and technology governance.",
+      "Most companies don't lack ideas. They lack a clear basis for making technology decisions. We work with leadership to establish that foundation: a current-state assessment, a prioritized roadmap, and a framework for evaluating where to invest, build, or integrate.",
     icon: (
       <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
         <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" strokeLinecap="round" strokeLinejoin="round" />
@@ -29,27 +26,10 @@ const serviceAreas = [
     ),
   },
   {
-    id: "leadership",
-    number: "02",
-    title: "Engineering Leadership & Org Design",
-    description:
-      "Technical teams without strong leadership default to firefighting. Techon Partners provides the day-to-day leadership that sets the standard for system quality, resolves ambiguity fast, and creates the conditions for teams to operate with consistency — not just survive.",
-    context:
-      "Engineering org design, hiring and interview frameworks, system ownership structures, performance culture, and senior talent development.",
-    icon: (
-      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
-        <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-  },
-  {
     id: "architecture",
-    number: "03",
-    title: "Systems, Integrations & Architecture",
+    title: "Systems & Architecture",
     description:
-      "The systems you depend on today become the constraints of tomorrow. Techon Partners assesses your operational platforms, integration architecture, and infrastructure — identifying where risk is accumulating and what needs to change before it becomes a problem.",
-    context:
-      "Operational system assessment, integration architecture review, scalability and reliability analysis, technical debt evaluation, and security posture review.",
+      "Operational systems rarely fail all at once. They degrade gradually until growth forces the issue. We assess your platforms, integrations, and infrastructure to surface where risk is accumulating, and define what needs to change before it becomes a business problem.",
     icon: (
       <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
         <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" strokeLinecap="round" strokeLinejoin="round" />
@@ -58,43 +38,12 @@ const serviceAreas = [
   },
   {
     id: "delivery",
-    number: "04",
-    title: "Execution, Delivery & Operational Flow",
+    title: "Execution & Delivery",
     description:
-      "Slow delivery is rarely a talent problem — it is a structural one. Techon Partners identifies the process and system factors that constrain output, and puts in place the execution practices that allow teams and operational workflows to run with reliability and pace.",
-    context:
-      "Delivery cadence and planning structure, operational workflow design, incident management, and cross-functional execution alignment.",
+      "Slow or inconsistent delivery is almost never a hiring problem. It is a structure, clarity, and prioritization problem. We identify what is constraining output and put in place the leadership practices that allow teams to operate with pace and reliability.",
     icon: (
       <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
         <path d="M13 10V3L4 14h7v7l9-11h-7z" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-  },
-  {
-    id: "modernization",
-    number: "05",
-    title: "Platform & Systems Modernization",
-    description:
-      "Legacy platforms constrain growth and increase operational risk. Techon Partners has led operational system and platform modernization programs — from cloud migrations and integration redesigns to full architecture transitions — and understands how to execute them without disrupting business continuity.",
-    context:
-      "Operational platform migration, systems re-architecture, integration modernisation, and cloud infrastructure adoption.",
-    icon: (
-      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
-        <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-  },
-  {
-    id: "advisory",
-    number: "06",
-    title: "Executive Advisory",
-    description:
-      "Technology decisions increasingly require CTO-level input in non-technical rooms — board meetings, investor conversations, and M&A processes. Techon Partners provides the senior technical voice that leadership teams need to navigate these situations with confidence.",
-    context:
-      "Board and investor communication, technical due diligence, vendor and partnership evaluation.",
-    icon: (
-      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
-        <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
   },
@@ -106,29 +55,29 @@ const engagementModels = [
     type: "Ongoing",
     title: "Ongoing Fractional CTO",
     description:
-      "A sustained, embedded engagement in which Techon Partners functions as part of your leadership team — attending meetings, making decisions, and providing continuous CTO-level presence on a part-time basis.",
+      "Techon Partners becomes part of your leadership team, operating with the same authority and context as a full-time CTO. The scope adjusts as the business evolves.",
     suitedFor:
-      "Companies that need consistent technology leadership but are not yet at the scale to justify a full-time CTO hire.",
+      "Companies that need consistent, senior technology leadership but are not yet at the point where a full-time hire makes sense.",
     dark: false,
+  },
+  {
+    id: "strategic",
+    type: "Strategic",
+    title: "Strategic Engagement",
+    description:
+      "Focused work on a specific challenge: a systems assessment, an architecture decision, a planning sprint, or interim leadership through a transition. Defined scope, clear outcome.",
+    suitedFor:
+      "Companies with a specific, time-bounded need for senior technical input or an independent point of view.",
+    dark: true,
   },
   {
     id: "advisory",
     type: "Advisory",
-    title: "Strategic Advisory",
+    title: "Advisory",
     description:
-      "Regular, structured engagement focused on strategic direction and senior technical guidance. Techon Partners works with your existing technical leadership to improve decision quality and provide experienced oversight — without day-to-day involvement.",
+      "Regular, structured access to senior technology leadership, without day-to-day involvement. Working sessions to pressure-test decisions, review direction, and provide experienced counsel alongside your existing technical lead.",
     suitedFor:
-      "Companies with a capable internal technical lead who would benefit from experienced, external counsel at a strategic level.",
-    dark: true,
-  },
-  {
-    id: "focused",
-    type: "Project",
-    title: "Focused Engagement",
-    description:
-      "A time-bounded engagement with a specific, defined objective — a technical due diligence review, an architecture assessment, an interim leadership gap, or a strategic planning sprint. Scoped to deliver a clear outcome within a defined period.",
-    suitedFor:
-      "Situations requiring senior technical expertise for a defined purpose, without the need for an ongoing relationship.",
+      "Companies with a capable internal technical lead who would benefit from senior, independent oversight.",
     dark: false,
   },
 ];
@@ -158,67 +107,54 @@ export default function ServicesPage() {
               Fractional CTO Services
             </h1>
             <p className="text-slate-400 text-lg leading-relaxed max-w-2xl">
-              Techon Partners provides senior technology leadership on a flexible, embedded
-              basis. The scope of each engagement is shaped by what the company actually
-              needs — not by a package or a program.
+              Growth creates complexity faster than most companies can manage
+              it. We provide the senior technology leadership to stay ahead of
+              it, embedded in your organization and accountable for outcomes.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Intro — what fractional CTO support means here */}
-      <section className="py-20 bg-white border-b border-slate-100" aria-label="What we provide">
+      {/* What engaging means */}
+      <section className="py-16 bg-white border-b border-slate-100" aria-label="What engaging Techon Partners means">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-16 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-10 items-start">
             <div>
-              <p className="text-blue-600 text-xs font-semibold tracking-[0.2em] uppercase mb-4">
-                What Engaging Techon Partners Means
-              </p>
-              <h2 className="text-2xl sm:text-3xl font-bold text-navy-800 leading-tight mb-5">
-                CTO-level leadership that is part of your team, not external to it
+              <h2 className="text-xl sm:text-2xl font-bold text-navy-800 leading-snug mb-3">
+                What engaging Techon Partners means
               </h2>
-              <p className="text-slate-500 leading-relaxed mb-4">
-                Fractional CTO support is not a consulting retainer. Techon Partners operates
-                as a working member of your leadership team — with real accountability,
-                access to your systems and people, and a stake in the outcome.
-              </p>
-              <p className="text-slate-500 leading-relaxed">
-                Every engagement is led personally by our Founder &amp; CTO. The scope,
-                pace, and focus of the work evolve as your company does. There are no fixed
-                modules, no standard deliverables, and no programs to complete.
+              <p className="text-slate-500 text-sm leading-relaxed">
+                CTO-level leadership as part of your team — not external to it.
               </p>
             </div>
-            <div className="grid grid-cols-1 gap-3">
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
                 {
-                  label: "Embedded, not external",
-                  detail: "We work inside your organisation — attending meetings, joining conversations, making calls.",
+                  term: "Embedded, not external",
+                  detail: "Inside your organization, in your meetings, your systems, your decisions.",
                 },
                 {
-                  label: "Personally led",
-                  detail: "Every engagement is led by our Founder & CTO. No delegation to associates.",
+                  term: "Founder-led",
+                  detail: "Every engagement is led by Isaac Drezdner directly. No associates involved.",
                 },
                 {
-                  label: "Adaptive scope",
-                  detail: "The engagement adjusts to what you need — broader when stakes are high, lighter when things are stable.",
+                  term: "Adaptive scope",
+                  detail: "Broader when stakes are high, lighter when things are stable. Adjusted to what the business needs.",
                 },
                 {
-                  label: "No lock-in",
-                  detail: "Month-to-month by default. We earn the relationship through results, not contract length.",
+                  term: "Month-to-month",
+                  detail: "No long-term contracts. Engagements continue because they're working.",
                 },
-              ].map(({ label, detail }) => (
-                <div
-                  key={label}
-                  className="flex gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200"
-                >
-                  <div className="w-1.5 rounded-full bg-blue-600 shrink-0 self-stretch" aria-hidden />
+              ].map(({ term, detail }) => (
+                <div key={term} className="flex gap-3">
+                  <div className="w-1 rounded-full bg-blue-600 shrink-0 self-stretch" aria-hidden />
                   <div>
-                    <p className="text-navy-800 font-semibold text-sm mb-0.5">{label}</p>
-                    <p className="text-slate-500 text-sm leading-relaxed">{detail}</p>
+                    <dt className="text-navy-800 font-semibold text-sm mb-0.5">{term}</dt>
+                    <dd className="text-slate-500 text-sm leading-relaxed">{detail}</dd>
                   </div>
                 </div>
               ))}
-            </div>
+            </dl>
           </div>
         </div>
       </section>
@@ -228,41 +164,30 @@ export default function ServicesPage() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="mb-14">
             <p className="text-blue-600 text-xs font-semibold tracking-[0.2em] uppercase mb-4">
-              Core Service Areas
+              Core Services
             </p>
             <h2
               id="service-areas-heading"
-              className="text-3xl sm:text-4xl font-bold text-navy-800 leading-tight max-w-2xl"
+              className="text-3xl sm:text-4xl font-bold text-navy-800 leading-tight"
             >
-              Where Techon Partners Focuses
+              Where we create impact
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            {serviceAreas.map(({ id, number, title, description, context, icon }) => (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            {serviceAreas.map(({ id, title, description, icon }) => (
               <article
                 key={id}
                 id={id}
                 className="group bg-white rounded-2xl border border-slate-200 p-7 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-200"
               >
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="w-9 h-9 rounded-lg bg-navy-900 flex items-center justify-center text-blue-400 shrink-0">
-                    {icon}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-slate-400 text-xs font-mono">{number}</span>
-                    </div>
-                    <h3 className="text-navy-800 font-bold text-base group-hover:text-blue-600 transition-colors">
-                      {title}
-                    </h3>
-                  </div>
+                <div className="w-9 h-9 rounded-lg bg-navy-900 flex items-center justify-center text-blue-400 mb-5 shrink-0">
+                  {icon}
                 </div>
-                <p className="text-slate-500 text-sm leading-relaxed mb-4">{description}</p>
-                <p className="text-slate-400 text-xs leading-relaxed border-t border-slate-100 pt-4">
-                  <span className="text-slate-500 font-medium">Includes: </span>
-                  {context}
-                </p>
+                <h3 className="text-navy-800 font-bold text-base mb-3 group-hover:text-blue-600 transition-colors">
+                  {title}
+                </h3>
+                <p className="text-slate-500 text-sm leading-relaxed">{description}</p>
               </article>
             ))}
           </div>
@@ -280,13 +205,11 @@ export default function ServicesPage() {
               id="engagement-heading"
               className="text-3xl sm:text-4xl font-bold text-navy-800 leading-tight max-w-2xl mb-4"
             >
-              How We Work Together
+              How we work
             </h2>
             <p className="text-slate-500 max-w-2xl leading-relaxed">
-              Every company&apos;s situation is different. The right engagement model depends
-              on your current leadership structure, stage of growth, and the nature of the
-              challenge you&apos;re facing. We scope each engagement around what you
-              actually need.
+              Engagements are structured based on your situation, starting
+              with what you&apos;re facing today and evolving as needed.
             </p>
           </div>
 
@@ -300,7 +223,6 @@ export default function ServicesPage() {
                     : "bg-white border-slate-200"
                 }`}
               >
-                {/* Type badge */}
                 <span
                   className={`self-start text-xs font-semibold px-2.5 py-1 rounded-full mb-5 ${
                     dark
@@ -327,10 +249,11 @@ export default function ServicesPage() {
                   {description}
                 </p>
 
-                {/* Suited for */}
                 <div
                   className={`rounded-xl p-4 mb-6 ${
-                    dark ? "bg-white/[0.04] border border-white/[0.06]" : "bg-slate-50 border border-slate-200"
+                    dark
+                      ? "bg-white/[0.04] border border-white/[0.06]"
+                      : "bg-slate-50 border border-slate-200"
                   }`}
                 >
                   <p
@@ -366,9 +289,9 @@ export default function ServicesPage() {
                 href="/contact"
                 className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
               >
-                Start with a discovery call
+                Start with a discovery call.
               </a>{" "}
-              — we&apos;ll recommend the right structure for your situation.
+              We&apos;ll recommend the right structure for your situation.
             </p>
           </div>
         </div>

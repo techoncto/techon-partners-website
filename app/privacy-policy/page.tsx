@@ -137,7 +137,7 @@ export default function PrivacyPolicyPage() {
                   Data Security
                 </h2>
                 <p className="text-slate-600 leading-relaxed">
-                  We take reasonable technical and organisational precautions to protect
+                  We take reasonable technical and organizational precautions to protect
                   information submitted through this site. This website is served over HTTPS.
                   While no online transmission is entirely risk-free, we handle any
                   information you provide with care and discretion.

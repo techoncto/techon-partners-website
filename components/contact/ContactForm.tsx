@@ -3,20 +3,10 @@
 import { useRef, useState, type FormEvent } from "react";
 import ReCAPTCHA from "react-google-recaptcha";
 
-const contactReasons = [
-  "Technology Strategy",
-  "Team Building",
-  "Architecture Review",
-  "Digital Transformation",
-  "Technical Due Diligence",
-  "Something Else",
-];
-
 type FormState = {
   name: string;
   email: string;
   company: string;
-  reason: string;
   message: string;
 };
 
@@ -33,21 +23,18 @@ export default function ContactForm() {
     name: "",
     email: "",
     company: "",
-    reason: "",
     message: "",
   });
 
   const validate = (): FormErrors => {
     const e: FormErrors = {};
 
-    if (!form.name.trim()) e.name = "Full name is required.";
+    if (!form.name.trim()) e.name = "Name is required.";
     if (!form.email.trim()) {
-      e.email = "Work email is required.";
+      e.email = "Email is required.";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       e.email = "Enter a valid email address.";
     }
-    if (!form.company.trim()) e.company = "Company name is required.";
-    if (!form.reason) e.reason = "Please select a service area.";
     if (!form.message.trim()) e.message = "Please describe your situation.";
 
     if (process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY && !recaptchaRef.current?.getValue()) {
@@ -88,7 +75,7 @@ export default function ContactForm() {
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -149,7 +136,7 @@ export default function ContactForm() {
             <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
-        <h2 className="text-navy-800 font-bold text-xl mb-2">Message Sent!</h2>
+        <h2 className="text-navy-800 font-bold text-xl mb-2">Message sent</h2>
         <p className="text-slate-500 text-sm">
           Thanks for reaching out. I&apos;ll be in touch within 24 hours.
         </p>
@@ -171,7 +158,7 @@ export default function ContactForm() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-navy-700 mb-1.5">
-            Full Name <span className="text-red-500" aria-hidden>*</span>
+            Name <span className="text-red-500" aria-hidden>*</span>
           </label>
           <input
             id="name"
@@ -192,7 +179,7 @@ export default function ContactForm() {
         </div>
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-navy-700 mb-1.5">
-            Work Email <span className="text-red-500" aria-hidden>*</span>
+            Email <span className="text-red-500" aria-hidden>*</span>
           </label>
           <input
             id="email"
@@ -215,55 +202,24 @@ export default function ContactForm() {
 
       <div>
         <label htmlFor="company" className="block text-sm font-medium text-navy-700 mb-1.5">
-          Company Name <span className="text-red-500" aria-hidden>*</span>
+          Company{" "}
+          <span className="text-slate-400 font-normal">(optional)</span>
         </label>
         <input
           id="company"
           name="company"
           type="text"
-          required
           autoComplete="organization"
           value={form.company}
           onChange={handleChange}
           placeholder="Acme Inc."
-          aria-describedby={errors.company ? "company-error" : undefined}
-          aria-invalid={!!errors.company}
-          className={`${inputClass} ${errors.company ? "border-red-400" : "border-slate-200"}`}
+          className={`${inputClass} border-slate-200`}
         />
-        {errors.company && (
-          <p id="company-error" className="mt-1.5 text-xs text-red-500">{errors.company}</p>
-        )}
-      </div>
-
-      <div>
-        <label htmlFor="reason" className="block text-sm font-medium text-navy-700 mb-1.5">
-          How Can I Help? <span className="text-red-500" aria-hidden>*</span>
-        </label>
-        <select
-          id="reason"
-          name="reason"
-          required
-          value={form.reason}
-          onChange={handleChange}
-          aria-describedby={errors.reason ? "reason-error" : undefined}
-          aria-invalid={!!errors.reason}
-          className={`${inputClass} ${errors.reason ? "border-red-400" : "border-slate-200"}`}
-        >
-          <option value="">Select a service area...</option>
-          {contactReasons.map((r) => (
-            <option key={r} value={r}>
-              {r}
-            </option>
-          ))}
-        </select>
-        {errors.reason && (
-          <p id="reason-error" className="mt-1.5 text-xs text-red-500">{errors.reason}</p>
-        )}
       </div>
 
       <div>
         <label htmlFor="message" className="block text-sm font-medium text-navy-700 mb-1.5">
-          Tell Me About Your Situation <span className="text-red-500" aria-hidden>*</span>
+          What are you facing? <span className="text-red-500" aria-hidden>*</span>
         </label>
         <textarea
           id="message"
@@ -272,7 +228,7 @@ export default function ContactForm() {
           rows={5}
           value={form.message}
           onChange={handleChange}
-          placeholder="What challenges are you facing? What are you hoping to achieve? The more context you share, the more useful our first call will be."
+                  placeholder="Briefly describe the situation. What's the challenge, and what outcome are you looking for?"
           aria-describedby={errors.message ? "message-error" : undefined}
           aria-invalid={!!errors.message}
           className={`${inputClass} ${errors.message ? "border-red-400" : "border-slate-200"} resize-y min-h-[120px]`}

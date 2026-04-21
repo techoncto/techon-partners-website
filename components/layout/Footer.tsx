@@ -3,9 +3,8 @@ import Link from "next/link";
 const footerLinks = {
   Services: [
     { label: "Technology Strategy", href: "/services#strategy" },
-    { label: "Team Building", href: "/services#team" },
-    { label: "Architecture Review", href: "/services#architecture" },
-    { label: "Digital Transformation", href: "/services#transformation" },
+    { label: "Systems & Architecture", href: "/services#architecture" },
+    { label: "Execution & Delivery", href: "/services#delivery" },
   ],
   Company: [
     { label: "About", href: "/about" },
@@ -39,8 +38,8 @@ export default function Footer() {
               Strategic Technology Leadership
             </p>
             <p className="text-sm leading-relaxed max-w-xs">
-              Senior technology leadership for growing companies — without the full-time cost.
-              Strategy, execution, and team mentorship that moves the business forward.
+              Senior technology leadership for growing companies, without the full-time cost.
+              Strategy, systems, and execution that move the business forward.
             </p>
             <div className="flex items-center gap-3 pt-1">
               <a

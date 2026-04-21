@@ -5,11 +5,11 @@ import { useState } from "react";
 const faqs = [
   {
     q: "What does a Fractional CTO actually do?",
-    a: "A Fractional CTO provides the same strategic and technical leadership as a full-time CTO, but on a part-time or project basis. At Techon Partners, that means technology strategy, engineering team leadership, architecture decisions, vendor evaluation, and board-level communication — all without the cost of a full-time executive hire.",
+    a: "A Fractional CTO provides the same strategic and technical leadership as a full-time CTO, but on a part-time or project basis. At Techon Partners, that means technology strategy, engineering team leadership, architecture decisions, vendor evaluation, and board-level communication. All without the cost of a full-time executive hire.",
   },
   {
     q: "How many hours per week does Techon Partners work with a client?",
-    a: "It depends on the engagement model. Advisory retainers are typically 4–8 hours/month. Embedded Fractional engagements are usually 2–3 days per week. We agree on the right level during the discovery phase and can adjust as your needs evolve.",
+    a: "It depends on the engagement model. Advisory engagements are typically 4–8 hours per month. Ongoing Fractional CTO engagements are usually 2–3 days per week. We agree on the right level during the discovery phase and can adjust as your needs evolve.",
   },
   {
     q: "Does Techon Partners work with companies outside the US?",
@@ -21,7 +21,7 @@ const faqs = [
   },
   {
     q: "What types of companies does Techon Partners work with?",
-    a: "We work with companies across industries — the common thread is growth pressure, not sector. The problems we solve tend to appear when a company is scaling faster than its technology and engineering org can keep up: systems under strain, teams without clear structure, delivery that has become unpredictable. If that describes your situation, industry is rarely a barrier. We'll tell you honestly in the first call if we're not the right fit.",
+    a: "We work with companies across industries. The common thread is growth pressure, not sector. The problems we solve tend to appear when a company is scaling faster than its technology and engineering org can keep up: systems under strain, teams without clear structure, delivery that has become unpredictable. If that describes your situation, industry is rarely a barrier. We'll tell you honestly in the first call if we're not the right fit.",
   },
 ];
 
