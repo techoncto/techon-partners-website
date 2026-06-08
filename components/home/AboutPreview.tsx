@@ -46,7 +46,7 @@ export default function AboutPreview() {
                 </span>
               </span>
               <a
-                href="https://www.linkedin.com/company/techonpartners"
+                href="https://www.linkedin.com/in/isaacdrezdner"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-slate-500 text-xs hover:text-slate-300 transition-colors"
