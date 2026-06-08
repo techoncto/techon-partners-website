@@ -22,7 +22,7 @@ const reassurances = [
   },
   {
     label: "Response within 24 hours",
-    detail: "All inquiries are reviewed personally by Isaac Drezdner.",
+    detail: "All inquiries are reviewed personally by our Founder & CTO.",
   },
 ];
 
@@ -136,7 +136,7 @@ export default function ContactPage() {
                     <span className="text-sm font-medium">contact@techonpartners.com</span>
                   </a>
                   <a
-                    href="https://www.linkedin.com/in/isaac-drezdner-30b584138/"
+                    href="https://www.linkedin.com/company/techonpartners"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-3 text-slate-600 hover:text-blue-600 transition-colors group"

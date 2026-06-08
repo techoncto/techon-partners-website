@@ -46,7 +46,7 @@ export default function AboutPreview() {
                 </span>
               </span>
               <a
-                href="https://www.linkedin.com/in/isaac-drezdner-30b584138/"
+                href="https://www.linkedin.com/company/techonpartners"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-slate-500 text-xs hover:text-slate-300 transition-colors"
@@ -59,7 +59,7 @@ export default function AboutPreview() {
           {/* Copy */}
           <div>
             <p className="text-blue-600 text-xs font-semibold tracking-[0.2em] uppercase mb-4">
-              Led by Isaac Drezdner
+              Led by our Founder & CTO Isaac Drezdner
             </p>
             <h2
               id="about-preview-heading"

@@ -135,7 +135,7 @@ export default function ServicesPage() {
                 },
                 {
                   term: "Founder-led",
-                  detail: "Every engagement is led by Isaac Drezdner directly. No associates involved.",
+                  detail: "Every engagement is led directly by our Founder & CTO. No associates involved.",
                 },
                 {
                   term: "Adaptive scope",
