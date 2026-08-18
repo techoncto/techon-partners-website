@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
         .from('password_resets')
         .insert({ client_id: client.id, token, expires_at: expiresAt })
 
-      const siteUrl   = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://techonpartners.com'
+      const siteUrl   = new URL(req.url).origin
       const resetLink = `${siteUrl}/onboard/reset-password?token=${token}`
 
       await resend.emails.send({
