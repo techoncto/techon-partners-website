@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { Resend } from 'resend'
+import { checkRateLimit } from '@/lib/rateLimit'
 import crypto from 'crypto'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(req: NextRequest) {
+  // 5 attempts per IP per 15 minutes
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  if (!checkRateLimit(`forgot-password-ip:${ip}`, 5, 15 * 60 * 1000)) {
+    return NextResponse.json({ success: true }) // silent 200 — don't confirm rate limit either
+  }
+
   try {
     const { email } = await req.json()
 
@@ -14,6 +21,11 @@ export async function POST(req: NextRequest) {
     }
 
     const normalised = email.trim().toLowerCase()
+
+    // 3 resets per email address per hour — prevents targeting a specific account
+    if (!checkRateLimit(`forgot-password-email:${normalised}`, 3, 60 * 60 * 1000)) {
+      return NextResponse.json({ success: true }) // silent 200 — preserve email enumeration protection
+    }
 
     // Always return success to avoid user enumeration
     const { data: client } = await supabaseAdmin

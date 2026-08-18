@@ -40,7 +40,7 @@ function OnboardContent() {
   const searchParams = useSearchParams()
 
   const [step, setStep] = useState<Step>('verify')
-  const [inviteTokenId, setInviteTokenId] = useState<number | null>(null)
+  const [validatedCode, setValidatedCode] = useState<string | null>(null)
 
   // Verify form
   const [code, setCode] = useState(searchParams.get('code') ?? '')
@@ -137,7 +137,7 @@ function OnboardContent() {
         return
       }
 
-      setInviteTokenId(data.inviteTokenId)
+      setValidatedCode(data.code)
       setStep('register')
     } finally {
       setVerifying(false)
@@ -181,7 +181,7 @@ function OnboardContent() {
       const res = await fetch('/api/onboard/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inviteTokenId, firstName, lastName, email, phone, companyName, address, address2, city, state, zip, country, password }),
+        body: JSON.stringify({ code: validatedCode, firstName, lastName, email, phone, companyName, address, address2, city, state, zip, country, password }),
       })
       const data = await res.json()
 

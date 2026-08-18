@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { signClientToken } from '@/lib/auth'
 import bcrypt from 'bcryptjs'
 
 export async function POST(req: NextRequest) {
@@ -35,10 +36,19 @@ export async function POST(req: NextRequest) {
 
     const password_hash = await bcrypt.hash(password, 12)
 
-    // Update the client password
+    // Fetch the current session_version so we can increment it
+    const { data: currentClient } = await supabaseAdmin
+      .from('clients')
+      .select('session_version')
+      .eq('id', reset.client_id)
+      .single()
+
+    const nextVersion = (currentClient?.session_version ?? 1) + 1
+
+    // Update password and increment session_version to invalidate all existing JWTs
     const { error: updateError } = await supabaseAdmin
       .from('clients')
-      .update({ password_hash })
+      .update({ password_hash, session_version: nextVersion })
       .eq('id', reset.client_id)
 
     if (updateError) {
@@ -51,7 +61,17 @@ export async function POST(req: NextRequest) {
       .update({ used_at: new Date().toISOString() })
       .eq('id', reset.id)
 
-    return NextResponse.json({ success: true })
+    // Issue a fresh session cookie with the new version so the user stays logged in
+    const jwt = await signClientToken(reset.client_id, nextVersion)
+    const response = NextResponse.json({ success: true })
+    response.cookies.set('client_session', jwt, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 30,
+      path: '/',
+    })
+    return response
   } catch (err) {
     console.error('Reset password error:', err)
     return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })

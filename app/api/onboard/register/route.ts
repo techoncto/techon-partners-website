@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { signClientToken } from '@/lib/auth'
+import { checkRateLimit } from '@/lib/rateLimit'
 import bcrypt from 'bcryptjs'
 
 export async function POST(req: NextRequest) {
-  try {
-    const { inviteTokenId, firstName, lastName, email, phone, companyName, address, address2, city, state, zip, country, password } = await req.json()
+  // 10 attempts per IP per 15 minutes
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  if (!checkRateLimit(`register:${ip}`, 10, 15 * 60 * 1000)) {
+    return NextResponse.json({ error: 'Too many attempts. Please try again later.' }, { status: 429 })
+  }
 
-    if (!inviteTokenId || !firstName || !lastName || !email || !password) {
+  try {
+    const { code, firstName, lastName, email, phone, companyName, address, address2, city, state, zip, country, password } = await req.json()
+
+    if (!code || !firstName || !lastName || !email || !password) {
       return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 })
     }
 
@@ -15,26 +22,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Password must be at least 8 characters.' }, { status: 400 })
     }
 
-    // Re-verify the token still belongs to this email and is unused
+    // Look up by the opaque code string, not the sequential integer ID.
+    // Collapse all token/email mismatch errors into one response so the endpoint
+    // cannot be used to enumerate valid invite codes.
     const { data: token, error: tokenError } = await supabaseAdmin
       .from('invite_tokens')
-      .select('id, client_email, used')
-      .eq('id', inviteTokenId)
+      .select('id, code, client_email, used')
+      .eq('code', code.trim().toUpperCase())
       .single()
 
-    if (tokenError || !token) {
-      return NextResponse.json({ error: 'Invalid invitation.' }, { status: 404 })
-    }
-
-    if (token.client_email.toLowerCase() !== email.trim().toLowerCase()) {
-      return NextResponse.json({ error: 'Email does not match invitation.' }, { status: 403 })
+    if (tokenError || !token || token.client_email.toLowerCase() !== email.trim().toLowerCase()) {
+      return NextResponse.json({ error: 'Invalid invitation.' }, { status: 400 })
     }
 
     if (token.used) {
-      return NextResponse.json({ error: 'This invitation has already been used.' }, { status: 409 })
+      return NextResponse.json({ error: 'This invitation has already been used.' }, { status: 400 })
     }
 
-    // Check if client already registered
     const { data: existing } = await supabaseAdmin
       .from('clients')
       .select('id')
@@ -50,7 +54,7 @@ export async function POST(req: NextRequest) {
     const { data: client, error: clientError } = await supabaseAdmin
       .from('clients')
       .insert({
-        invite_token_id: inviteTokenId,
+        invite_token_id: token.id,
         first_name: firstName.trim(),
         last_name: lastName.trim(),
         email: email.trim().toLowerCase(),
@@ -72,20 +76,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to create account. Please try again.' }, { status: 500 })
     }
 
-    // Mark the invite token as used
     await supabaseAdmin
       .from('invite_tokens')
       .update({ used: true })
-      .eq('id', inviteTokenId)
+      .eq('id', token.id)
 
-    const jwt = await signClientToken(client.id)
+    const jwt = await signClientToken(client.id, 1)
 
     const response = NextResponse.json({ success: true })
     response.cookies.set('client_session', jwt, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 30, // 30 days
+      maxAge: 60 * 60 * 24 * 30,
       path: '/',
     })
 

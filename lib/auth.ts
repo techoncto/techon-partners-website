@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
+import { supabaseAdmin } from '@/lib/supabase'
 
 const adminSecret = new TextEncoder().encode(process.env.ADMIN_JWT_SECRET!)
 const clientSecret = new TextEncoder().encode(process.env.CLIENT_JWT_SECRET!)
@@ -31,25 +32,39 @@ export async function getAdminSession(): Promise<boolean> {
 
 // ── Client session ─────────────────────────────────────────────────────────────
 
-export async function signClientToken(clientId: string): Promise<string> {
-  return new SignJWT({ clientId })
+export async function signClientToken(clientId: string, sessionVersion: number): Promise<string> {
+  return new SignJWT({ clientId, sv: sessionVersion })
     .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime('30d')
     .sign(clientSecret)
 }
 
-export async function verifyClientToken(token: string): Promise<{ clientId: string } | null> {
+export async function verifyClientToken(token: string): Promise<{ clientId: string; sv: number } | null> {
   try {
     const { payload } = await jwtVerify(token, clientSecret)
-    return { clientId: payload.clientId as string }
+    return { clientId: payload.clientId as string, sv: payload.sv as number }
   } catch {
     return null
   }
 }
 
+// Verifies the JWT signature then checks the session version against the DB.
+// Tokens issued before a password reset will have a stale sv and be rejected.
 export async function getClientSession(): Promise<{ clientId: string } | null> {
   const cookieStore = await cookies()
   const token = cookieStore.get('client_session')?.value
   if (!token) return null
-  return verifyClientToken(token)
+
+  const payload = await verifyClientToken(token)
+  if (!payload) return null
+
+  const { data: client } = await supabaseAdmin
+    .from('clients')
+    .select('session_version')
+    .eq('id', payload.clientId)
+    .single()
+
+  if (!client || client.session_version !== payload.sv) return null
+
+  return { clientId: payload.clientId }
 }

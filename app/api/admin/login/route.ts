@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { timingSafeEqual } from 'crypto'
 import { signAdminToken } from '@/lib/auth'
+import { checkRateLimit } from '@/lib/rateLimit'
 
 export async function POST(req: NextRequest) {
+  // 5 attempts per IP per 15 minutes
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  if (!checkRateLimit(`admin-login:${ip}`, 5, 15 * 60 * 1000)) {
+    return NextResponse.json({ error: 'Too many attempts. Please try again later.' }, { status: 429 })
+  }
+
   try {
     const { password } = await req.json()
 
@@ -9,7 +17,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Password is required.' }, { status: 400 })
     }
 
-    if (password !== process.env.ADMIN_PASSWORD) {
+    const expected = process.env.ADMIN_PASSWORD ?? ''
+    const passwordsMatch =
+      password.length === expected.length &&
+      timingSafeEqual(Buffer.from(password), Buffer.from(expected))
+
+    if (!passwordsMatch) {
       return NextResponse.json({ error: 'Invalid password.' }, { status: 401 })
     }
 

@@ -41,9 +41,10 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  // Protect the onboarding form page and save/submit API routes
+  // Protect the onboarding form page and client API routes
   if (
     pathname === '/onboard/form' ||
+    pathname === '/api/onboard/questions' ||
     pathname === '/api/onboard/save' ||
     pathname === '/api/onboard/submit'
   ) {
@@ -63,6 +64,7 @@ export const config = {
   matcher: [
     '/api/admin/:path*',
     '/onboard/form',
+    '/api/onboard/questions',
     '/api/onboard/save',
     '/api/onboard/submit',
   ],

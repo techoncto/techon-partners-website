@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { signClientToken } from '@/lib/auth'
+import { checkRateLimit } from '@/lib/rateLimit'
 import bcrypt from 'bcryptjs'
 
 export async function POST(req: NextRequest) {
+  // 10 attempts per IP per 15 minutes
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  if (!checkRateLimit(`client-login:${ip}`, 10, 15 * 60 * 1000)) {
+    return NextResponse.json({ error: 'Too many attempts. Please try again later.' }, { status: 429 })
+  }
+
   try {
     const { email, password } = await req.json()
 
@@ -13,7 +20,7 @@ export async function POST(req: NextRequest) {
 
     const { data: client, error } = await supabaseAdmin
       .from('clients')
-      .select('id, password_hash, completed')
+      .select('id, password_hash, completed, session_version')
       .eq('email', email.trim().toLowerCase())
       .single()
 
@@ -26,7 +33,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid email or password.' }, { status: 401 })
     }
 
-    const jwt = await signClientToken(client.id)
+    const jwt = await signClientToken(client.id, client.session_version)
 
     const response = NextResponse.json({ success: true, completed: client.completed })
     response.cookies.set('client_session', jwt, {
