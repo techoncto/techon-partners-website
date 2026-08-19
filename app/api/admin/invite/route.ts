@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to create invitation.', detail: insertError?.message }, { status: 500 })
     }
 
-    const siteUrl = process.env.DEPLOY_PRIME_URL ?? new URL(req.url).origin
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? new URL(req.url).origin
     const inviteLink = `${siteUrl}/onboard?code=${token.code}`
 
     // Send invite email
