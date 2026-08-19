@@ -6,7 +6,7 @@ export async function GET() {
     const { data: tokens, error } = await supabaseAdmin
       .from('invite_tokens')
       .select(`
-        id, code, client_name, client_email, created_at, used, email_sent_at, email_status, initiated_at,
+        id, code, client_name, client_email, created_at, used, email_sent_at, email_status, initiated_at, revoked_at, revoked,
         clients ( id, first_name, last_name, completed )
       `)
       .order('created_at', { ascending: false })

@@ -18,7 +18,9 @@ create table if not exists invite_tokens (
   email_sent_at    timestamptz,
   resend_email_id  text,
   email_status     text not null default 'not_sent',
-  initiated_at     timestamptz
+  initiated_at     timestamptz,
+  revoked_at       timestamptz,
+  revoked          boolean not null default false
 );
 
 create table if not exists clients (

@@ -14,6 +14,8 @@ interface InviteToken {
   email_sent_at: string | null
   email_status: string
   initiated_at: string | null
+  revoked_at: string | null
+  revoked: boolean
   clients: { id: string; first_name: string; last_name: string; completed: boolean } | null
 }
 
@@ -264,11 +266,59 @@ function InvitePanel({ onInviteSent }: { onInviteSent: () => void }) {
   )
 }
 
+// ── Revoke confirm modal ────────────────────────────────────────
+
+function RevokeModal({
+  token,
+  onConfirm,
+  onCancel,
+  loading,
+}: {
+  token: InviteToken
+  onConfirm: () => void
+  onCancel: () => void
+  loading: boolean
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40" onClick={onCancel} />
+      <div className="relative bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-sm p-6">
+        <h3 className="font-semibold text-navy-900 text-base mb-1">Revoke invitation?</h3>
+        <p className="text-sm text-slate-500 mb-1">
+          This will revoke the invite for <span className="font-medium text-navy-800">{token.client_name}</span>.
+        </p>
+        <p className="text-xs text-slate-400 mb-6">
+          The code <code className="font-mono font-semibold text-navy-700 bg-slate-100 px-1.5 py-0.5 rounded">{token.code}</code> will be marked as revoked and can no longer be used.
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={onCancel}
+            disabled={loading}
+            className="flex-1 px-4 py-2.5 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors"
+          >
+            {loading ? 'Revoking…' : 'Revoke'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Invitations tab ────────────────────────────────────────────
 
 function InvitationsTable({ refreshKey }: { refreshKey: number }) {
   const [tokens, setTokens] = useState<InviteToken[]>([])
   const [loading, setLoading] = useState(true)
+  const [revoking, setRevoking] = useState(false)
+  const [confirmToken, setConfirmToken] = useState<InviteToken | null>(null)
+  const [revokeError, setRevokeError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -280,94 +330,154 @@ function InvitationsTable({ refreshKey }: { refreshKey: number }) {
 
   useEffect(() => { load() }, [load, refreshKey])
 
+  async function handleRevoke() {
+    if (!confirmToken) return
+    setRevoking(true)
+    setRevokeError(null)
+    try {
+      const res = await fetch(`/api/admin/invites/${confirmToken.id}`, { method: 'DELETE' })
+      const data = await res.json()
+      if (!res.ok) {
+        setRevokeError(data.error ?? 'Failed to revoke invitation.')
+        setConfirmToken(null)
+      } else {
+        const revokedAt = new Date().toISOString()
+        setTokens(prev => prev.map(t => t.id === confirmToken.id ? { ...t, revoked: true, revoked_at: revokedAt } : t))
+        setConfirmToken(null)
+      }
+    } finally {
+      setRevoking(false)
+    }
+  }
+
   function tokenStatus(token: InviteToken) {
+    if (token.revoked) {
+      return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-600">Revoked</span>
+    }
     if (token.clients?.completed) {
       return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">Completed</span>
     }
     if (token.used && token.clients) {
       return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">Registered</span>
     }
+    if (token.initiated_at) {
+      return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">In Progress</span>
+    }
     return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-500">Pending</span>
   }
 
+  const canRevoke = (token: InviteToken) => !token.revoked && !token.initiated_at && !token.used
+
   return (
-    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-      <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-        <div>
-          <h2 className="font-semibold text-navy-900">Invitations</h2>
-          <p className="text-xs text-slate-400 mt-0.5">All sent invites including pending and unused codes</p>
+    <>
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+          <div>
+            <h2 className="font-semibold text-navy-900">Invitations</h2>
+            <p className="text-xs text-slate-400 mt-0.5">All sent invites including pending and unused codes</p>
+          </div>
+          <span className="text-xs text-slate-400">{tokens.length} invite{tokens.length !== 1 ? 's' : ''}</span>
         </div>
-        <span className="text-xs text-slate-400">{tokens.length} invite{tokens.length !== 1 ? 's' : ''}</span>
+
+        {revokeError && (
+          <div className="mx-6 mt-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 flex items-center justify-between">
+            <span>{revokeError}</span>
+            <button onClick={() => setRevokeError(null)} className="text-red-400 hover:text-red-600 ml-4 text-lg font-light leading-none">✕</button>
+          </div>
+        )}
+
+        {loading && <div className="px-6 py-10 text-center text-slate-400 text-sm">Loading…</div>}
+
+        {!loading && tokens.length === 0 && (
+          <div className="px-6 py-10 text-center text-slate-400 text-sm">No invitations sent yet.</div>
+        )}
+
+        {!loading && tokens.length > 0 && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-100 bg-slate-50">
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Recipient</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Code</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Sent</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Email</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Initiated</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
+                  <th className="px-6 py-3" />
+                </tr>
+              </thead>
+              <tbody>
+                {tokens.map(token => (
+                  <tr
+                    key={token.id}
+                    className={`border-b border-slate-100 last:border-0 transition-colors ${token.revoked ? 'bg-slate-50/60 opacity-60' : 'hover:bg-slate-50'}`}
+                  >
+                    <td className="px-6 py-4">
+                      <p className="font-medium text-navy-900">{token.client_name}</p>
+                      <p className="text-xs text-slate-400">{token.client_email}</p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <code className="font-mono text-xs font-semibold tracking-widest text-navy-800 bg-slate-100 px-2 py-1 rounded">
+                        {token.code}
+                      </code>
+                    </td>
+                    <td className="px-6 py-4 text-slate-400 text-xs">
+                      {token.email_sent_at ? (
+                        <>
+                          <span>{new Date(token.email_sent_at).toLocaleDateString()}</span>
+                          <span className="block text-slate-300">
+                            {new Date(token.email_sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-slate-300">—</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <EmailStatusBadge status={token.email_status} />
+                    </td>
+                    <td className="px-6 py-4 text-slate-400 text-xs">
+                      {token.initiated_at ? (
+                        <>
+                          <span>{new Date(token.initiated_at).toLocaleDateString()}</span>
+                          <span className="block text-slate-300">
+                            {new Date(token.initiated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-slate-300">—</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      {tokenStatus(token)}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      {canRevoke(token) && (
+                        <button
+                          onClick={() => setConfirmToken(token)}
+                          className="px-3 py-1.5 border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 text-xs font-medium rounded-lg transition-colors"
+                        >
+                          Revoke
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
-      {loading && <div className="px-6 py-10 text-center text-slate-400 text-sm">Loading…</div>}
-
-      {!loading && tokens.length === 0 && (
-        <div className="px-6 py-10 text-center text-slate-400 text-sm">No invitations sent yet.</div>
+      {confirmToken && (
+        <RevokeModal
+          token={confirmToken}
+          onConfirm={handleRevoke}
+          onCancel={() => setConfirmToken(null)}
+          loading={revoking}
+        />
       )}
-
-      {!loading && tokens.length > 0 && (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-100 bg-slate-50">
-                <th className="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Recipient</th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Code</th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Sent</th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Email</th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Initiated</th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tokens.map(token => (
-                <tr key={token.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
-                  <td className="px-6 py-4">
-                    <p className="font-medium text-navy-900">{token.client_name}</p>
-                    <p className="text-xs text-slate-400">{token.client_email}</p>
-                  </td>
-                  <td className="px-6 py-4">
-                    <code className="font-mono text-xs font-semibold tracking-widest text-navy-800 bg-slate-100 px-2 py-1 rounded">
-                      {token.code}
-                    </code>
-                  </td>
-                  <td className="px-6 py-4 text-slate-400 text-xs">
-                    {token.email_sent_at ? (
-                      <>
-                        <span>{new Date(token.email_sent_at).toLocaleDateString()}</span>
-                        <span className="block text-slate-300">
-                          {new Date(token.email_sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="text-slate-300">—</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4">
-                    <EmailStatusBadge status={token.email_status} />
-                  </td>
-                  <td className="px-6 py-4 text-slate-400 text-xs">
-                    {token.initiated_at ? (
-                      <>
-                        <span>{new Date(token.initiated_at).toLocaleDateString()}</span>
-                        <span className="block text-slate-300">
-                          {new Date(token.initiated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="text-slate-300">—</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4">
-                    {tokenStatus(token)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+    </>
   )
 }
 

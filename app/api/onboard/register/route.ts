@@ -27,12 +27,16 @@ export async function POST(req: NextRequest) {
     // cannot be used to enumerate valid invite codes.
     const { data: token, error: tokenError } = await supabaseAdmin
       .from('invite_tokens')
-      .select('id, code, client_email, used')
+      .select('id, code, client_email, used, revoked')
       .eq('code', code.trim().toUpperCase())
       .single()
 
     if (tokenError || !token || token.client_email.toLowerCase() !== email.trim().toLowerCase()) {
       return NextResponse.json({ error: 'Invalid invitation.' }, { status: 400 })
+    }
+
+    if (token.revoked) {
+      return NextResponse.json({ error: 'This invitation has been revoked. Please contact your administrator.' }, { status: 410 })
     }
 
     if (token.used) {

@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
 
     const { data: token, error } = await supabaseAdmin
       .from('invite_tokens')
-      .select('id, code, client_email, used, initiated_at')
+      .select('id, code, client_email, used, revoked, initiated_at')
       .eq('code', code.trim().toUpperCase())
       .single()
 
@@ -26,6 +26,10 @@ export async function POST(req: NextRequest) {
     // so an attacker cannot use the response to determine if a code is valid.
     if (error || !token || token.client_email.toLowerCase() !== email.trim().toLowerCase()) {
       return NextResponse.json({ error: 'Invalid invitation code or email address.' }, { status: 400 })
+    }
+
+    if (token.revoked) {
+      return NextResponse.json({ error: 'This invitation has been revoked. Please contact your administrator.' }, { status: 410 })
     }
 
     if (token.used) {
