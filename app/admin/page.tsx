@@ -319,6 +319,7 @@ function InvitationsTable({ refreshKey }: { refreshKey: number }) {
   const [revoking, setRevoking] = useState(false)
   const [confirmToken, setConfirmToken] = useState<InviteToken | null>(null)
   const [revokeError, setRevokeError] = useState<string | null>(null)
+  const [hideRevoked, setHideRevoked] = useState(true)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -368,6 +369,9 @@ function InvitationsTable({ refreshKey }: { refreshKey: number }) {
 
   const canRevoke = (token: InviteToken) => !token.revoked && !token.initiated_at && !token.used
 
+  const visible = hideRevoked ? tokens.filter(t => !t.revoked) : tokens
+  const revokedCount = tokens.filter(t => t.revoked).length
+
   return (
     <>
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
@@ -376,7 +380,22 @@ function InvitationsTable({ refreshKey }: { refreshKey: number }) {
             <h2 className="font-semibold text-navy-900">Invitations</h2>
             <p className="text-xs text-slate-400 mt-0.5">All sent invites including pending and unused codes</p>
           </div>
-          <span className="text-xs text-slate-400">{tokens.length} invite{tokens.length !== 1 ? 's' : ''}</span>
+          <div className="flex items-center gap-4">
+            {revokedCount > 0 && (
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={hideRevoked}
+                  onChange={e => setHideRevoked(e.target.checked)}
+                  className="w-3.5 h-3.5 accent-slate-500 cursor-pointer"
+                />
+                <span className="text-xs text-slate-500">
+                  Hide revoked{hideRevoked ? ` (${revokedCount})` : ''}
+                </span>
+              </label>
+            )}
+            <span className="text-xs text-slate-400">{visible.length} invite{visible.length !== 1 ? 's' : ''}</span>
+          </div>
         </div>
 
         {revokeError && (
@@ -392,7 +411,11 @@ function InvitationsTable({ refreshKey }: { refreshKey: number }) {
           <div className="px-6 py-10 text-center text-slate-400 text-sm">No invitations sent yet.</div>
         )}
 
-        {!loading && tokens.length > 0 && (
+        {!loading && tokens.length > 0 && visible.length === 0 && (
+          <div className="px-6 py-10 text-center text-slate-400 text-sm">No active invitations. <button onClick={() => setHideRevoked(false)} className="text-blue-500 hover:underline">Show revoked</button></div>
+        )}
+
+        {!loading && visible.length > 0 && (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -407,7 +430,7 @@ function InvitationsTable({ refreshKey }: { refreshKey: number }) {
                 </tr>
               </thead>
               <tbody>
-                {tokens.map(token => (
+                {visible.map(token => (
                   <tr
                     key={token.id}
                     className={`border-b border-slate-100 last:border-0 transition-colors ${token.revoked ? 'bg-slate-50/60 opacity-60' : 'hover:bg-slate-50'}`}
