@@ -123,12 +123,12 @@ function buildEmailHtml({
 
         <!-- Logo / header -->
         <tr>
-          <td style="background:#0a1628;padding:28px 40px;text-align:center;">
+          <td style="background:#0a1628;padding:0;text-align:center;">
             <img
               src="${siteUrl}/logo.png"
               alt="Techon Partners"
-              width="240"
-              style="display:block;margin:0 auto;max-width:240px;height:auto;border:0;"
+              width="560"
+              style="display:block;margin:0 auto;width:100%;max-width:560px;height:auto;border:0;"
             />
           </td>
         </tr>
