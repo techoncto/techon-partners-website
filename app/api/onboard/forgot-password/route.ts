@@ -86,9 +86,9 @@ function buildResetEmail({
       <table width="560" cellpadding="0" cellspacing="0" role="presentation" style="max-width:560px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
 
         <tr>
-          <td style="background:#0a1628;padding:28px 40px;text-align:center;">
-            <img src="${siteUrl}/logo.png" alt="Techon Partners" width="240"
-              style="display:block;margin:0 auto;max-width:240px;height:auto;border:0;" />
+          <td style="background:#0a1628;padding:0;text-align:center;">
+            <img src="${siteUrl}/logo.png" alt="Techon Partners" width="560"
+              style="display:block;margin:0 auto;width:100%;max-width:560px;height:auto;max-height:200px;object-fit:cover;border:0;" />
           </td>
         </tr>
 
