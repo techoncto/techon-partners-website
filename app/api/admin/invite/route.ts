@@ -139,7 +139,7 @@ function buildEmailHtml({
             <p style="margin:0 0 6px;color:#0f172a;font-size:18px;font-weight:600;">Hello ${clientName},</p>
             <p style="margin:0 0 24px;color:#475569;font-size:15px;line-height:1.7;">
               You've been invited to complete the <strong>Techon Partners Onboarding Questionnaire</strong>.
-              This helps us understand your business and technology landscape so we can hit the ground running together.
+              This helps us understand your business and technology landscape so we prepare for our engagement together.
             </p>
 
             <!-- Invite code box -->

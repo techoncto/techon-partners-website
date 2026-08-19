@@ -18,7 +18,7 @@ export default function OnboardLayout({ children }: { children: React.ReactNode 
         />
       )}
       <header className="bg-navy-900 py-4 px-6 flex items-center gap-3">
-        <span className="text-white font-semibold text-lg tracking-tight">Techon Partners</span>
+        <a href={process.env.NEXT_PUBLIC_SITE_URL} className="text-white font-semibold text-lg tracking-tight hover:text-slate-300 transition-colors">Techon Partners</a>
         <span className="text-slate-400 text-sm">/ Client Onboarding</span>
       </header>
       <main className="flex-1 flex flex-col items-center justify-start py-10 px-4">

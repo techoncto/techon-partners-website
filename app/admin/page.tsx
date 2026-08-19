@@ -112,7 +112,7 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
     <div className="min-h-screen bg-slate-100 flex flex-col">
       {/* Same top nav as the dashboard */}
       <header className="bg-navy-900 py-4 px-6 flex items-center gap-3">
-        <span className="text-white font-semibold text-lg tracking-tight">Techon Partners</span>
+        <a href={process.env.NEXT_PUBLIC_SITE_URL} className="text-white font-semibold text-lg tracking-tight hover:text-slate-300 transition-colors">Techon Partners</a>
         <span className="text-slate-400 text-sm">/ Admin Portal</span>
       </header>
 
@@ -698,7 +698,7 @@ function Dashboard() {
       {/* Top nav */}
       <header className="bg-navy-900 py-4 px-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="text-white font-semibold text-lg tracking-tight">Techon Partners</span>
+          <a href={process.env.NEXT_PUBLIC_SITE_URL} className="text-white font-semibold text-lg tracking-tight hover:text-slate-300 transition-colors">Techon Partners</a>
           <span className="text-slate-400 text-sm">/ Admin Portal</span>
         </div>
         <button onClick={handleLogout} className="text-sm text-slate-400 hover:text-white transition-colors">

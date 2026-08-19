@@ -53,10 +53,11 @@ export async function POST(req: NextRequest) {
       const resetLink = `${siteUrl}/onboard/reset-password?token=${token}`
 
       await resend.emails.send({
-        from:    'Techon Partners <onboarding@techonpartners.com>',
-        to:      normalised,
-        subject: 'Reset your Techon Partners password',
-        html:    buildResetEmail({ firstName: client.first_name, resetLink, siteUrl }),
+        from:     'Techon Partners <noreply@techonpartners.com>',
+        reply_to: 'support@techonpartners.com',
+        to:       normalised,
+        subject:  'Reset your Techon Partners password',
+        html:     buildResetEmail({ firstName: client.first_name, resetLink, siteUrl }),
       })
     }
 
