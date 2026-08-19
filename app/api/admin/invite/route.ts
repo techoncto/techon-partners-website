@@ -128,7 +128,7 @@ function buildEmailHtml({
               src="${siteUrl}/logo.png"
               alt="Techon Partners"
               width="560"
-              style="display:block;margin:0 auto;width:100%;max-width:560px;height:auto;max-height:220px;object-fit:cover;border:0;"
+              style="display:block;margin:0 auto;width:100%;max-width:560px;height:auto;max-height:160px;object-fit:cover;border:0;"
             />
           </td>
         </tr>
