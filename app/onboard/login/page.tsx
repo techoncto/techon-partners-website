@@ -35,7 +35,7 @@ function LoginContent() {
         return
       }
 
-      router.push('/onboard/form')
+      router.push('/onboard/home')
     } finally {
       setLoading(false)
     }
@@ -46,7 +46,7 @@ function LoginContent() {
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
         <h1 className="text-2xl font-bold text-navy-900 mb-1">Welcome Back</h1>
         <p className="text-slate-500 text-sm mb-8">
-          Log in to continue your onboarding questionnaire.
+          Log in to continue your onboarding.
         </p>
 
         {notice === 'already-registered' && (

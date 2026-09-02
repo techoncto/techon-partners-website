@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { HIDDEN_QUESTION_IDS } from '@/lib/onboard-required'
 import { supabaseAdmin } from '@/lib/supabase'
 
 export async function GET() {
@@ -10,7 +11,7 @@ export async function GET() {
         parts ( id, name, display_order ),
         questions (
           id, label, answer_type, help_text, required, display_order,
-          question_options ( id, label, display_order )
+          question_options ( id, label, display_order, follow_up_prompt )
         )
       `)
       .order('display_order', { ascending: true })
@@ -19,10 +20,11 @@ export async function GET() {
       return NextResponse.json({ error: 'Failed to load questions.' }, { status: 500 })
     }
 
-    // Sort questions and options by display_order
     const sorted = (categories ?? []).map(cat => ({
       ...cat,
-      questions: [...(cat.questions ?? [])].sort((a, b) => a.display_order - b.display_order).map(q => ({
+      questions: [...(cat.questions ?? [])]
+        .filter(q => !HIDDEN_QUESTION_IDS.has(q.id))
+        .sort((a, b) => a.display_order - b.display_order).map(q => ({
         ...q,
         options: [...(q.question_options ?? [])].sort((a, b) => a.display_order - b.display_order),
       })),

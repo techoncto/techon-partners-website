@@ -9,6 +9,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { data: client } = await supabaseAdmin
+      .from('clients')
+      .select('completed')
+      .eq('id', session.clientId)
+      .single()
+
+    if (client?.completed) {
+      return NextResponse.json({ error: 'Questionnaire already submitted.', alreadySubmitted: true }, { status: 409 })
+    }
+
     const { answers } = await req.json()
     // answers: Array<{ questionId: string; value: string | string[] | null }>
 

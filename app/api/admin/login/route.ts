@@ -13,14 +13,21 @@ export async function POST(req: NextRequest) {
   try {
     const { password } = await req.json()
 
-    if (!password) {
+    if (typeof password !== 'string' || !password) {
       return NextResponse.json({ error: 'Password is required.' }, { status: 400 })
     }
 
-    const expected = process.env.ADMIN_PASSWORD ?? ''
+    // Fail closed: a missing or trivial env secret must never compare equal to "".
+    const expected = process.env.ADMIN_PASSWORD
+    if (!expected || expected.length < 12) {
+      console.error('ADMIN_PASSWORD is missing or shorter than 12 characters')
+      return NextResponse.json({ error: 'Invalid password.' }, { status: 401 })
+    }
+
+    const submitted = Buffer.from(password)
+    const secret = Buffer.from(expected)
     const passwordsMatch =
-      password.length === expected.length &&
-      timingSafeEqual(Buffer.from(password), Buffer.from(expected))
+      submitted.length === secret.length && timingSafeEqual(submitted, secret)
 
     if (!passwordsMatch) {
       return NextResponse.json({ error: 'Invalid password.' }, { status: 401 })

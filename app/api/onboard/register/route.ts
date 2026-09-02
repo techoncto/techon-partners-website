@@ -35,12 +35,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid invitation.' }, { status: 400 })
     }
 
-    if (token.revoked) {
-      return NextResponse.json({ error: 'This invitation has been revoked. Please contact your administrator.' }, { status: 410 })
-    }
-
-    if (token.used) {
-      return NextResponse.json({ error: 'This invitation has already been used.' }, { status: 400 })
+    if (token.revoked || token.used) {
+      return NextResponse.json({ error: 'Invalid invitation.' }, { status: 400 })
     }
 
     const { data: existing } = await supabaseAdmin

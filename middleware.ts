@@ -41,12 +41,35 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  // Protect the onboarding form page and client API routes
+  // Already-logged-in clients: skip invite/login and go to the onboard home
+  if (pathname === '/onboard/login' || pathname === '/onboard') {
+    const valid = await isValidClient(req)
+    if (valid) {
+      return NextResponse.redirect(new URL('/onboard/home', req.url))
+    }
+    return NextResponse.next()
+  }
+
+  if (pathname === '/onboard/form' || pathname.startsWith('/onboard/form/')) {
+    const dest = pathname.replace(/^\/onboard\/form/, '/onboard/questionnaire')
+    return NextResponse.redirect(new URL(dest + req.nextUrl.search, req.url))
+  }
+
+  // Protect onboarding pages and client API routes
   if (
-    pathname === '/onboard/form' ||
+    pathname === '/onboard/home' ||
+    pathname === '/onboard/profile' ||
+    pathname === '/onboard/questionnaire' ||
+    pathname.startsWith('/onboard/questionnaire/') ||
+    pathname === '/onboard/budget-audit' ||
+    pathname === '/onboard/team' ||
+    pathname === '/api/onboard/me' ||
     pathname === '/api/onboard/questions' ||
+    pathname === '/api/onboard/answers' ||
     pathname === '/api/onboard/save' ||
-    pathname === '/api/onboard/submit'
+    pathname === '/api/onboard/submit' ||
+    pathname === '/api/onboard/budget-audit' ||
+    pathname.startsWith('/api/onboard/team')
   ) {
     const valid = await isValidClient(req)
     if (!valid) {
@@ -63,9 +86,23 @@ export async function middleware(req: NextRequest) {
 export const config = {
   matcher: [
     '/api/admin/:path*',
+    '/onboard',
+    '/onboard/login',
+    '/onboard/home',
+    '/onboard/profile',
     '/onboard/form',
+    '/onboard/form/:path*',
+    '/onboard/questionnaire',
+    '/onboard/questionnaire/:path*',
+    '/onboard/budget-audit',
+    '/onboard/team',
+    '/api/onboard/me',
     '/api/onboard/questions',
+    '/api/onboard/answers',
     '/api/onboard/save',
     '/api/onboard/submit',
+    '/api/onboard/budget-audit',
+    '/api/onboard/team',
+    '/api/onboard/team/:path*',
   ],
 }

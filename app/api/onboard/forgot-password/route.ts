@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { Resend } from 'resend'
 import { checkRateLimit } from '@/lib/rateLimit'
+import { escapeHtml } from '@/lib/onboard-emails'
 import crypto from 'crypto'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -54,10 +55,10 @@ export async function POST(req: NextRequest) {
 
       await resend.emails.send({
         from:     'Techon Partners <noreply@techonpartners.com>',
-        reply_to: 'support@techonpartners.com',
+        replyTo: 'support@techonpartners.com',
         to:       normalised,
         subject:  'Reset your Techon Partners password',
-        html:     buildResetEmail({ firstName: client.first_name, resetLink, siteUrl }),
+        html:     buildResetEmail({ firstName: client.first_name ?? '', resetLink, siteUrl }),
       })
     }
 
@@ -78,6 +79,11 @@ function buildResetEmail({
   resetLink: string
   siteUrl: string
 }): string {
+  const safeName = escapeHtml(firstName)
+  const safeSiteUrl = escapeHtml(siteUrl)
+  const safeResetLink = escapeHtml(resetLink)
+  const logoUrl = escapeHtml(`${siteUrl}/logo.png`)
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
@@ -88,14 +94,14 @@ function buildResetEmail({
 
         <tr>
           <td style="background:#0a1628;padding:0;text-align:center;">
-            <img src="${siteUrl}/logo.png" alt="Techon Partners" width="560"
+            <img src="${logoUrl}" alt="Techon Partners" width="560"
               style="display:block;margin:0 auto;width:100%;max-width:560px;height:auto;max-height:200px;object-fit:cover;border:0;" />
           </td>
         </tr>
 
         <tr>
           <td style="padding:40px;">
-            <p style="margin:0 0 6px;color:#0f172a;font-size:18px;font-weight:600;">Hi ${firstName},</p>
+            <p style="margin:0 0 6px;color:#0f172a;font-size:18px;font-weight:600;">Hi ${safeName},</p>
             <p style="margin:0 0 24px;color:#475569;font-size:15px;line-height:1.7;">
               We received a request to reset your password. Click the button below — the link is valid for <strong>1 hour</strong>.
             </p>
@@ -103,7 +109,7 @@ function buildResetEmail({
             <table cellpadding="0" cellspacing="0" role="presentation" style="margin:0 0 28px;">
               <tr>
                 <td style="background:#2563eb;border-radius:10px;">
-                  <a href="${resetLink}"
+                  <a href="${safeResetLink}"
                     style="display:inline-block;padding:14px 36px;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;letter-spacing:0.2px;">
                     Reset Password &rarr;
                   </a>
@@ -113,13 +119,13 @@ function buildResetEmail({
 
             <p style="margin:0 0 24px;color:#64748b;font-size:13px;line-height:1.6;">
               If the button doesn't work, paste this link into your browser:<br>
-              <a href="${resetLink}" style="color:#2563eb;word-break:break-all;">${resetLink}</a>
+              <a href="${safeResetLink}" style="color:#2563eb;word-break:break-all;">${safeResetLink}</a>
             </p>
 
             <p style="margin:0 0 0;color:#94a3b8;font-size:12px;line-height:1.7;">
               If you didn't request a password reset, you can safely ignore this email. Your password won't change.<br>
               &copy; ${new Date().getFullYear()} Techon Partners &middot;
-              <a href="${siteUrl}" style="color:#94a3b8;text-decoration:none;">${siteUrl}</a>
+              <a href="${safeSiteUrl}" style="color:#94a3b8;text-decoration:none;">${safeSiteUrl}</a>
             </p>
           </td>
         </tr>

@@ -9,16 +9,26 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: answers, error } = await supabaseAdmin
-      .from('answers')
-      .select('question_id, answer_value')
-      .eq('client_id', session.clientId)
+    const [{ data: answers, error }, { data: client }] = await Promise.all([
+      supabaseAdmin
+        .from('answers')
+        .select('question_id, answer_value')
+        .eq('client_id', session.clientId),
+      supabaseAdmin
+        .from('clients')
+        .select('completed')
+        .eq('id', session.clientId)
+        .single(),
+    ])
 
     if (error) {
       return NextResponse.json({ error: 'Failed to load answers.' }, { status: 500 })
     }
 
-    return NextResponse.json({ answers: answers ?? [] })
+    return NextResponse.json({
+      answers: answers ?? [],
+      completed: client?.completed ?? false,
+    })
   } catch {
     return NextResponse.json({ error: 'Something went wrong.' }, { status: 500 })
   }

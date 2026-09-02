@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { escapeHtml } from '@/lib/onboard-emails'
 import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -113,6 +114,13 @@ function buildEmailHtml({
   inviteLink: string
   siteUrl: string
 }): string {
+  const safeName = escapeHtml(clientName)
+  const safeCode = escapeHtml(code)
+  const safeSiteUrl = escapeHtml(siteUrl)
+  const safeInviteLink = escapeHtml(inviteLink)
+  const onboardUrl = escapeHtml(`${siteUrl}/onboard`)
+  const logoUrl = escapeHtml(`${siteUrl}/logo.png`)
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
@@ -125,7 +133,7 @@ function buildEmailHtml({
         <tr>
           <td style="background:#0a1628;padding:0;text-align:center;">
             <img
-              src="${siteUrl}/logo.png"
+              src="${logoUrl}"
               alt="Techon Partners"
               width="560"
               style="display:block;margin:0 auto;width:100%;max-width:560px;height:auto;max-height:200px;object-fit:cover;border:0;"
@@ -136,7 +144,7 @@ function buildEmailHtml({
         <!-- Body -->
         <tr>
           <td style="padding:40px;">
-            <p style="margin:0 0 6px;color:#0f172a;font-size:18px;font-weight:600;">Hello ${clientName},</p>
+            <p style="margin:0 0 6px;color:#0f172a;font-size:18px;font-weight:600;">Hello ${safeName},</p>
             <p style="margin:0 0 24px;color:#475569;font-size:15px;line-height:1.7;">
               You've been invited to complete the <strong>Techon Partners Onboarding Questionnaire</strong>.
               This helps us understand your business and technology landscape so we prepare for our engagement together.
@@ -147,20 +155,20 @@ function buildEmailHtml({
               <tr>
                 <td style="background:#f8fafc;border:2px dashed #cbd5e1;border-radius:12px;padding:24px;text-align:center;">
                   <p style="margin:0 0 8px;color:#64748b;font-size:13px;font-weight:500;text-transform:uppercase;letter-spacing:1px;">Your Invitation Code</p>
-                  <p style="margin:0;color:#0f172a;font-size:32px;font-weight:800;letter-spacing:10px;font-family:'Courier New',Courier,monospace;">${code}</p>
+                  <p style="margin:0;color:#0f172a;font-size:32px;font-weight:800;letter-spacing:10px;font-family:'Courier New',Courier,monospace;">${safeCode}</p>
                 </td>
               </tr>
             </table>
 
             <p style="margin:0 0 28px;color:#64748b;font-size:14px;line-height:1.6;">
-              Enter this code at <a href="${siteUrl}/onboard" style="color:#2563eb;text-decoration:none;font-weight:500;">${siteUrl}/onboard</a> along with your email address, or click the button below to get started directly.
+              Enter this code at <a href="${onboardUrl}" style="color:#2563eb;text-decoration:none;font-weight:500;">${onboardUrl}</a> along with your email address, or click the button below to get started directly.
             </p>
 
             <!-- CTA button -->
             <table cellpadding="0" cellspacing="0" role="presentation">
               <tr>
                 <td style="background:#2563eb;border-radius:10px;">
-                  <a href="${inviteLink}" style="display:inline-block;padding:14px 36px;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;letter-spacing:0.2px;">
+                  <a href="${safeInviteLink}" style="display:inline-block;padding:14px 36px;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;letter-spacing:0.2px;">
                     Start Onboarding &rarr;
                   </a>
                 </td>
@@ -172,7 +180,7 @@ function buildEmailHtml({
             <p style="margin:0;color:#94a3b8;font-size:12px;line-height:1.7;">
               If you weren't expecting this invitation, you can safely ignore this email.<br>
               &copy; ${new Date().getFullYear()} Techon Partners &middot;
-              <a href="${siteUrl}" style="color:#94a3b8;text-decoration:none;">${siteUrl}</a>
+              <a href="${safeSiteUrl}" style="color:#94a3b8;text-decoration:none;">${safeSiteUrl}</a>
             </p>
           </td>
         </tr>

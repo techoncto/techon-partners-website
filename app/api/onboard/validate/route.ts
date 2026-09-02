@@ -16,24 +16,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invitation code and email are required.' }, { status: 400 })
     }
 
+    const genericInvalid = NextResponse.json(
+      { error: 'Invalid invitation code or email address. If you already have an account, please log in.' },
+      { status: 400 },
+    )
+
     const { data: token, error } = await supabaseAdmin
       .from('invite_tokens')
       .select('id, code, client_email, used, revoked, initiated_at')
       .eq('code', code.trim().toUpperCase())
       .single()
 
-    // Return the same error whether the code doesn't exist or the email doesn't match,
-    // so an attacker cannot use the response to determine if a code is valid.
-    if (error || !token || token.client_email.toLowerCase() !== email.trim().toLowerCase()) {
-      return NextResponse.json({ error: 'Invalid invitation code or email address.' }, { status: 400 })
-    }
-
-    if (token.revoked) {
-      return NextResponse.json({ error: 'This invitation has been revoked. Please contact your administrator.' }, { status: 410 })
-    }
-
-    if (token.used) {
-      return NextResponse.json({ error: 'This invitation has already been used. Please log in instead.' }, { status: 409 })
+    // Same response for missing code, wrong email, used, or revoked so this
+    // endpoint cannot confirm whether a known code is tied to a given email.
+    if (
+      error ||
+      !token ||
+      token.client_email.toLowerCase() !== email.trim().toLowerCase() ||
+      token.revoked ||
+      token.used
+    ) {
+      return genericInvalid
     }
 
     if (!token.initiated_at) {

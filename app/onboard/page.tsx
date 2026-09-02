@@ -128,11 +128,6 @@ function OnboardContent() {
       const data = await res.json()
 
       if (!res.ok) {
-        if (res.status === 409) {
-          // Already registered — redirect to login
-          router.push('/onboard/login?notice=already-registered')
-          return
-        }
         setVerifyError(data.error ?? 'Verification failed.')
         return
       }
@@ -190,7 +185,7 @@ function OnboardContent() {
         return
       }
 
-      router.push('/onboard/form')
+      router.push('/onboard/home')
     } finally {
       setRegistering(false)
     }
@@ -273,7 +268,7 @@ function OnboardContent() {
           </button>
           <h1 className="text-2xl font-bold text-navy-900 mb-1">Create Your Account</h1>
           <p className="text-slate-500 text-sm">
-            Fill in your details to get started. You can save your progress and come back at any time.
+            Fill in your details to get started. You can update this information later and complete each section at your own pace.
           </p>
         </div>
 
@@ -551,7 +546,7 @@ function OnboardContent() {
             disabled={registering}
             className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold py-3 rounded-lg text-sm transition-colors"
           >
-            {registering ? 'Creating account…' : 'Create Account & Start'}
+            {registering ? 'Creating account…' : 'Create Account'}
           </button>
         </form>
       </div>

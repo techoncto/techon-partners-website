@@ -53,6 +53,7 @@ export interface QuestionOption {
   question_id: number
   label: string
   display_order: number
+  follow_up_prompt: string | null
 }
 
 export interface Answer {
@@ -70,4 +71,51 @@ export interface CategoryWithQuestions extends Category {
 export interface ClientWithStatus extends Omit<Client, 'password_hash'> {
   invite_tokens: Pick<InviteToken, 'code' | 'created_at' | 'client_name'>
   status: 'invited' | 'in_progress' | 'completed'
+}
+
+export interface BudgetAuditItem {
+  id: number
+  client_id: string
+  expense: string
+  cost: number | null
+  purpose: string
+  action: 'Keep It' | 'Review It' | 'Trash It' | ''
+  billing_frequency: string
+  billing_date: string
+  notes: string
+  display_order: number
+  created_at: string
+  deleted_at: string | null
+}
+
+export interface TeamMember {
+  id: number
+  client_id: string
+  team: string
+  department: string
+  role: string
+  resource: string
+  hours_per_week: number | null
+  responsibilities: string
+  software_used: string
+  reports_to: string
+  display_order: number
+  created_at: string
+  deleted_at: string | null
+}
+
+export interface TeamSkillRating {
+  team_member_id: number
+  skill_id: string
+  proficiency: number
+  interest: number
+}
+
+export interface ClientOrgChart {
+  id: number
+  client_id: string
+  file_path: string
+  file_name: string
+  mime_type: string
+  created_at: string
 }

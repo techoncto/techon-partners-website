@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
+import { formatAnswerValue } from '@/lib/onboard-emails'
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -40,7 +42,7 @@ interface ClientRow {
 }
 
 interface AnswerRow {
-  answer_value: string | string[] | null
+  answer_value: unknown
   questions: {
     id: number
     label: string
@@ -57,6 +59,39 @@ interface AnswerRow {
       }
     }
   } | null
+}
+
+interface BudgetItem {
+  id: number
+  expense: string
+  cost: number | null
+  purpose: string
+  action: string
+  billing_frequency: string
+  billing_date: string
+  notes: string
+  display_order: number
+}
+
+interface TeamMemberRow {
+  id: number
+  team: string
+  department: string
+  role: string
+  resource: string
+  hours_per_week: number | null
+  responsibilities: string
+  software_used: string
+  reports_to: string
+  display_order: number
+  team_skill_ratings?: { skill_id: string; proficiency: number; interest: number }[]
+}
+
+interface OrgChartMeta {
+  id: number
+  file_name: string
+  mime_type: string
+  created_at: string
 }
 
 // ── Helpers ────────────────────────────────────────────────────
@@ -111,8 +146,8 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col">
       {/* Same top nav as the dashboard */}
-      <header className="bg-navy-900 py-4 px-6 flex items-center gap-3">
-        <a href={process.env.NEXT_PUBLIC_SITE_URL} className="text-white font-semibold text-lg tracking-tight hover:text-slate-300 transition-colors">Techon Partners</a>
+      <header className="bg-navy-900 h-16 px-6 flex items-center gap-3">
+        <Link href="/" className="text-white font-semibold text-lg tracking-tight hover:text-slate-300 transition-colors cursor-pointer">Techon Partners</Link>
         <span className="text-slate-400 text-sm">/ Admin Portal</span>
       </header>
 
@@ -506,15 +541,79 @@ function InvitationsTable({ refreshKey }: { refreshKey: number }) {
 
 // ── Answer detail drawer ───────────────────────────────────────
 
-function AnswerDrawer({ client, onClose }: { client: ClientRow; onClose: () => void }) {
+const ACTION_COLORS: Record<string, string> = {
+  'Keep It':   'bg-green-100 text-green-700',
+  'Review It': 'bg-amber-100 text-amber-700',
+  'Trash It':  'bg-red-100 text-red-600',
+}
+
+function UncompleteModal({
+  client,
+  onConfirm,
+  onCancel,
+  loading,
+}: {
+  client: ClientRow
+  onConfirm: () => void
+  onCancel: () => void
+  loading: boolean
+}) {
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40" onClick={onCancel} />
+      <div className="relative bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-sm p-6">
+        <h3 className="font-semibold text-navy-900 text-base mb-1">Reopen this questionnaire?</h3>
+        <p className="text-sm text-slate-500 mb-1">
+          <span className="font-medium text-navy-800">{client.first_name} {client.last_name}</span> will be able to edit and submit again.
+        </p>
+        <p className="text-xs text-slate-400 mb-6">
+          Existing answers stay saved.
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={onCancel}
+            disabled={loading}
+            className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className="flex-1 px-4 py-2.5 bg-navy-900 hover:bg-navy-800 disabled:opacity-50 text-white text-sm font-semibold rounded-lg"
+          >
+            {loading ? 'Reopening…' : 'Reopen'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function AnswerDrawer({
+  client,
+  onClose,
+  onRequestUncomplete,
+}: {
+  client: ClientRow
+  onClose: () => void
+  onRequestUncomplete: () => void
+}) {
   const [answers, setAnswers] = useState<AnswerRow[]>([])
+  const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([])
+  const [teamMembers, setTeamMembers] = useState<TeamMemberRow[]>([])
+  const [orgChart, setOrgChart] = useState<OrgChartMeta | null>(null)
   const [loading, setLoading] = useState(true)
+  const [drawerTab, setDrawerTab] = useState<'questionnaire' | 'budget' | 'team'>('questionnaire')
 
   useEffect(() => {
     async function load() {
       const res = await fetch(`/api/admin/submissions/${client.id}`)
       const data = await res.json()
       setAnswers(data.answers ?? [])
+      setBudgetItems(data.budgetItems ?? [])
+      setTeamMembers(data.teamMembers ?? [])
+      setOrgChart(data.orgChart ?? null)
       setLoading(false)
     }
     load()
@@ -531,19 +630,23 @@ function AnswerDrawer({ client, onClose }: { client: ClientRow; onClose: () => v
 
   const sortedGroups = Object.values(grouped).sort((a, b) => a.cat.display_order - b.cat.display_order)
 
-  function displayValue(val: string | string[] | null): string {
-    if (val === null || val === undefined) return '—'
-    if (Array.isArray(val)) return val.length > 0 ? val.join(', ') : '—'
-    return val.trim() || '—'
-  }
+  const budgetTotal = budgetItems.reduce((s, item) => s + (item.cost ?? 0), 0)
 
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/40" onClick={onClose} />
-      <div className="w-full max-w-xl bg-white shadow-2xl overflow-y-auto flex flex-col">
+      <div className="w-full max-w-2xl bg-white shadow-2xl overflow-y-auto flex flex-col">
+        {/* Drawer header */}
         <div className="flex items-start justify-between px-6 py-4 border-b border-slate-200 sticky top-0 bg-white z-10">
           <div className="space-y-0.5">
-            <h2 className="font-semibold text-navy-900">{client.first_name} {client.last_name}</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="font-semibold text-navy-900">{client.first_name} {client.last_name}</h2>
+              {client.completed ? (
+                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">Completed</span>
+              ) : (
+                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">In Progress</span>
+              )}
+            </div>
             <p className="text-xs text-slate-500">{client.email}{client.phone ? ` · ${client.phone}` : ''}</p>
             {client.company_name && <p className="text-xs text-slate-500">{client.company_name}</p>}
             {(client.address || client.city) && (
@@ -552,32 +655,191 @@ function AnswerDrawer({ client, onClose }: { client: ClientRow; onClose: () => v
                   .filter(Boolean).join(', ')}
               </p>
             )}
+            {client.completed && (
+              <button
+                onClick={onRequestUncomplete}
+                className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:border-slate-300 text-xs font-medium transition-colors"
+              >
+                <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                </svg>
+                Reopen questionnaire
+              </button>
+            )}
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-xl font-light ml-4 shrink-0">✕</button>
         </div>
 
-        <div className="p-6 space-y-8 flex-1">
-          {loading && <p className="text-slate-400 text-sm">Loading answers…</p>}
-          {!loading && sortedGroups.length === 0 && (
-            <p className="text-slate-400 text-sm">No answers submitted yet.</p>
-          )}
-          {sortedGroups.map(({ cat, answers: catAnswers }) => (
-            <div key={cat.id}>
-              <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-0.5">{cat.parts?.name ?? ''}</p>
-              <h3 className="font-semibold text-navy-900 mb-4">{cat.name}</h3>
-              <div className="space-y-4">
-                {catAnswers
-                  .sort((a, b) => (a.questions?.display_order ?? 0) - (b.questions?.display_order ?? 0))
-                  .map((a, i) => (
-                    <div key={i} className="border-b border-slate-100 pb-4 last:border-0 last:pb-0">
-                      <p className="text-xs text-slate-500 mb-1">{a.questions?.label}</p>
-                      <p className="text-sm text-navy-800 whitespace-pre-wrap">{displayValue(a.answer_value)}</p>
-                    </div>
-                  ))}
-              </div>
-            </div>
+        {/* Drawer tabs */}
+        <div className="flex gap-1 px-6 pt-4 pb-0 border-b border-slate-100">
+          {([
+            { id: 'questionnaire', label: 'Questionnaire' },
+            { id: 'budget', label: `Budget Audit${budgetItems.length > 0 ? ` (${budgetItems.length})` : ''}` },
+            { id: 'team', label: `Team${teamMembers.length > 0 ? ` (${teamMembers.length})` : ''}` },
+          ] as { id: 'questionnaire' | 'budget' | 'team'; label: string }[]).map(t => (
+            <button
+              key={t.id}
+              onClick={() => setDrawerTab(t.id)}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${
+                drawerTab === t.id
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              {t.label}
+            </button>
           ))}
         </div>
+
+        {/* Questionnaire tab */}
+        {drawerTab === 'questionnaire' && (
+          <div className="p-6 space-y-8 flex-1">
+            {loading && <p className="text-slate-400 text-sm">Loading answers…</p>}
+            {!loading && sortedGroups.length === 0 && (
+              <p className="text-slate-400 text-sm">No answers submitted yet.</p>
+            )}
+            {sortedGroups.map(({ cat, answers: catAnswers }) => (
+              <div key={cat.id}>
+                <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-0.5">{cat.parts?.name ?? ''}</p>
+                <h3 className="font-semibold text-navy-900 mb-4">{cat.name}</h3>
+                <div className="space-y-4">
+                  {catAnswers
+                    .sort((a, b) => (a.questions?.display_order ?? 0) - (b.questions?.display_order ?? 0))
+                    .map((a, i) => (
+                      <div key={i} className="border-b border-slate-100 pb-4 last:border-0 last:pb-0">
+                        <p className="text-xs text-slate-500 mb-1">{a.questions?.label}</p>
+                        <p className="text-sm text-navy-800 whitespace-pre-wrap">{formatAnswerValue(a.answer_value)}</p>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Team tab */}
+        {drawerTab === 'team' && (
+          <div className="p-6 flex-1 space-y-6">
+            {loading && <p className="text-slate-400 text-sm">Loading team…</p>}
+            {!loading && (
+              <>
+                <div className="bg-slate-50 rounded-xl border border-slate-200 px-4 py-3">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Org chart</p>
+                  {orgChart ? (
+                    <a
+                      href={`/api/admin/submissions/${client.id}/org-chart`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-sm text-blue-600 hover:underline"
+                    >
+                      {orgChart.file_name}
+                    </a>
+                  ) : (
+                    <p className="text-sm text-slate-400">No org chart uploaded.</p>
+                  )}
+                </div>
+
+                {teamMembers.length === 0 ? (
+                  <p className="text-slate-400 text-sm">No team members submitted yet.</p>
+                ) : (
+                  <div className="overflow-x-auto rounded-xl border border-slate-200">
+                    <table className="w-full text-sm min-w-[640px]">
+                      <thead>
+                        <tr className="border-b border-slate-100 bg-slate-50">
+                          <th className="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase">Resource</th>
+                          <th className="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase">Role</th>
+                          <th className="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase">Team</th>
+                          <th className="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase">Hrs</th>
+                          <th className="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase">Reports to</th>
+                          <th className="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase">Skills rated</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {teamMembers.map(m => (
+                          <tr key={m.id} className="border-b border-slate-100 last:border-0">
+                            <td className="px-3 py-3">
+                              <p className="font-medium text-navy-900">{m.resource || '—'}</p>
+                              {m.software_used && <p className="text-xs text-slate-400 mt-0.5">{m.software_used}</p>}
+                            </td>
+                            <td className="px-3 py-3 text-navy-800">{m.role || '—'}</td>
+                            <td className="px-3 py-3 text-slate-500 text-xs">{[m.team, m.department].filter(Boolean).join(' · ') || '—'}</td>
+                            <td className="px-3 py-3 text-navy-800 tabular-nums">{m.hours_per_week ?? '—'}</td>
+                            <td className="px-3 py-3 text-slate-500 text-xs">{m.reports_to || '—'}</td>
+                            <td className="px-3 py-3 text-slate-500 text-xs">
+                              {(m.team_skill_ratings ?? []).filter(r => r.proficiency > 0 || r.interest > 0).length}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Budget Audit tab */}
+        {drawerTab === 'budget' && (
+          <div className="p-6 flex-1">
+            {loading && <p className="text-slate-400 text-sm">Loading budget audit…</p>}
+            {!loading && budgetItems.length === 0 && (
+              <p className="text-slate-400 text-sm">No budget audit items submitted yet.</p>
+            )}
+            {!loading && budgetItems.length > 0 && (
+              <div className="space-y-4">
+                {/* Summary */}
+                <div className="flex items-center justify-between bg-slate-50 rounded-xl border border-slate-200 px-4 py-3">
+                  <span className="text-sm font-medium text-slate-500">{budgetItems.length} items</span>
+                  <span className="text-sm font-bold text-navy-900">
+                    Total: ${budgetTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+
+                {/* Items */}
+                <div className="overflow-x-auto rounded-xl border border-slate-200">
+                  <table className="w-full text-sm min-w-[560px]">
+                    <thead>
+                      <tr className="border-b border-slate-100 bg-slate-50">
+                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Expense</th>
+                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Cost</th>
+                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Action</th>
+                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Frequency</th>
+                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Notes</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {budgetItems.map(item => (
+                        <tr key={item.id} className="border-b border-slate-100 last:border-0">
+                          <td className="px-4 py-3">
+                            <p className="font-medium text-navy-900">{item.expense || '—'}</p>
+                            {item.purpose && <p className="text-xs text-slate-400 mt-0.5">{item.purpose}</p>}
+                          </td>
+                          <td className="px-4 py-3 text-navy-800 font-medium">
+                            {item.cost != null
+                              ? `$${item.cost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              : '—'}
+                          </td>
+                          <td className="px-4 py-3">
+                            {item.action ? (
+                              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${ACTION_COLORS[item.action] ?? 'bg-slate-100 text-slate-500'}`}>
+                                {item.action}
+                              </span>
+                            ) : '—'}
+                          </td>
+                          <td className="px-4 py-3 text-slate-500 text-xs">
+                            {[item.billing_frequency, item.billing_date?.replaceAll(',', ' · ')].filter(Boolean).join(' · ') || '—'}
+                          </td>
+                          <td className="px-4 py-3 text-slate-400 text-xs">{item.notes || '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -589,6 +851,9 @@ function SubmissionsTable({ refreshKey }: { refreshKey: number }) {
   const [clients, setClients] = useState<ClientRow[]>([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<ClientRow | null>(null)
+  const [confirmClient, setConfirmClient] = useState<ClientRow | null>(null)
+  const [uncompleting, setUncompleting] = useState(false)
+  const [uncompleteError, setUncompleteError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -599,6 +864,30 @@ function SubmissionsTable({ refreshKey }: { refreshKey: number }) {
   }, [])
 
   useEffect(() => { load() }, [load, refreshKey])
+
+  async function handleUncomplete() {
+    if (!confirmClient) return
+    setUncompleting(true)
+    setUncompleteError(null)
+    try {
+      const res = await fetch(`/api/admin/submissions/${confirmClient.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ completed: false }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setUncompleteError(data.error ?? 'Failed to update questionnaire status.')
+        setConfirmClient(null)
+        return
+      }
+      setClients(prev => prev.map(c => c.id === confirmClient.id ? { ...c, completed: false } : c))
+      setSelected(prev => prev?.id === confirmClient.id ? { ...prev, completed: false } : prev)
+      setConfirmClient(null)
+    } finally {
+      setUncompleting(false)
+    }
+  }
 
   function statusBadge(client: ClientRow) {
     if (client.completed) {
@@ -620,6 +909,13 @@ function SubmissionsTable({ refreshKey }: { refreshKey: number }) {
           </div>
           <span className="text-xs text-slate-400">{clients.length} client{clients.length !== 1 ? 's' : ''}</span>
         </div>
+
+        {uncompleteError && (
+          <div className="mx-6 mt-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 flex items-center justify-between">
+            <span>{uncompleteError}</span>
+            <button onClick={() => setUncompleteError(null)} className="text-red-400 hover:text-red-600 ml-4 text-lg font-light leading-none">✕</button>
+          </div>
+        )}
 
         {loading && <div className="px-6 py-10 text-center text-slate-400 text-sm">Loading…</div>}
 
@@ -658,12 +954,22 @@ function SubmissionsTable({ refreshKey }: { refreshKey: number }) {
                       {new Date(client.created_at).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => setSelected(client)}
-                        className="text-xs text-blue-600 hover:underline font-medium"
-                      >
-                        View Answers
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        {client.completed && (
+                          <button
+                            onClick={() => setConfirmClient(client)}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300 text-xs font-medium transition-colors"
+                          >
+                            Reopen
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setSelected(client)}
+                          className="inline-flex items-center px-2.5 py-1.5 rounded-md bg-slate-900 text-white hover:bg-slate-800 text-xs font-medium transition-colors"
+                        >
+                          View
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -673,7 +979,22 @@ function SubmissionsTable({ refreshKey }: { refreshKey: number }) {
         )}
       </div>
 
-      {selected && <AnswerDrawer client={selected} onClose={() => setSelected(null)} />}
+      {selected && (
+        <AnswerDrawer
+          client={selected}
+          onClose={() => setSelected(null)}
+          onRequestUncomplete={() => setConfirmClient(selected)}
+        />
+      )}
+
+      {confirmClient && (
+        <UncompleteModal
+          client={confirmClient}
+          onConfirm={handleUncomplete}
+          onCancel={() => setConfirmClient(null)}
+          loading={uncompleting}
+        />
+      )}
     </>
   )
 }
@@ -696,9 +1017,9 @@ function Dashboard() {
   return (
     <div className="min-h-screen bg-slate-100">
       {/* Top nav */}
-      <header className="bg-navy-900 py-4 px-6 flex items-center justify-between">
+      <header className="bg-navy-900 h-16 px-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <a href={process.env.NEXT_PUBLIC_SITE_URL} className="text-white font-semibold text-lg tracking-tight hover:text-slate-300 transition-colors">Techon Partners</a>
+          <Link href="/" className="text-white font-semibold text-lg tracking-tight hover:text-slate-300 transition-colors cursor-pointer">Techon Partners</Link>
           <span className="text-slate-400 text-sm">/ Admin Portal</span>
         </div>
         <button onClick={handleLogout} className="text-sm text-slate-400 hover:text-white transition-colors">
