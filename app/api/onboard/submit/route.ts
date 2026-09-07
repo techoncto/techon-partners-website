@@ -98,7 +98,7 @@ async function loadAnswerSections(clientId: string): Promise<SubmittedAnswerSect
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getClientSession(req.cookies)
+    const session = await getClientSession(req)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

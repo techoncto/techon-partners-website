@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import ProfileEditor, { formatAddress, type Profile } from '../ProfileEditor'
+import { redirectToOnboardLogin } from '../redirectToLogin'
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -16,7 +17,7 @@ export default function ProfilePage() {
       try {
         const res = await fetch('/api/onboard/me', { credentials: 'include' })
         if (res.status === 401) {
-          window.location.href = '/onboard/login'
+          await redirectToOnboardLogin()
           return
         }
         const data = await res.json()

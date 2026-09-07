@@ -21,7 +21,7 @@ function toIntId(value: unknown): number | null {
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getClientSession(req.cookies)
+    const session = await getClientSession(req)
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { data, error } = await supabaseAdmin
@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getClientSession(req.cookies)
+    const session = await getClientSession(req)
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await req.json() as { items: ItemInput[]; deletedIds?: unknown[] }

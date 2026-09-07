@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import ProfileEditor, { formatAddress, type Profile } from './ProfileEditor'
+import { redirectToOnboardLogin } from './redirectToLogin'
 
 export default function ProfileDrawer({
   open,
@@ -41,7 +42,7 @@ export default function ProfileDrawer({
     fetch('/api/onboard/me', { credentials: 'include' })
       .then(async res => {
         if (res.status === 401) {
-          window.location.href = '/onboard/login'
+          await redirectToOnboardLogin()
           return
         }
         const data = await res.json()

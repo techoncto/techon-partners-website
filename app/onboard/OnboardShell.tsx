@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import OnboardNav from './OnboardNav'
 import ProfileDrawer from './ProfileDrawer'
 import type { Profile } from './ProfileEditor'
+import { redirectToOnboardLogin } from './redirectToLogin'
 
 const AUTH_PATHS = ['/onboard/home', '/onboard/questionnaire', '/onboard/budget-audit', '/onboard/team', '/onboard/profile']
 
@@ -30,7 +31,7 @@ export default function OnboardShell({ children }: { children: React.ReactNode }
     fetch('/api/onboard/me', { credentials: 'include' })
       .then(async res => {
         if (res.status === 401) {
-          window.location.href = '/onboard/login'
+          await redirectToOnboardLogin()
           return
         }
         const data = await res.json()
@@ -38,11 +39,10 @@ export default function OnboardShell({ children }: { children: React.ReactNode }
       })
       .catch(() => {})
     return () => { cancelled = true }
-  }, [showSidebar, pathname])
+  }, [showSidebar])
 
   async function handleLogout() {
-    await fetch('/api/onboard/logout', { method: 'POST' })
-    window.location.href = '/onboard/login'
+    await redirectToOnboardLogin()
   }
 
   return (

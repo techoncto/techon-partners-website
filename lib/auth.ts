@@ -1,6 +1,8 @@
 import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
+import type { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { CLIENT_ID_HEADER, CLIENT_SV_HEADER } from '@/lib/client-session-headers'
 
 const adminSecret = new TextEncoder().encode(process.env.ADMIN_JWT_SECRET!)
 const clientSecret = new TextEncoder().encode(process.env.CLIENT_JWT_SECRET!)
@@ -54,29 +56,50 @@ export async function verifyClientToken(token: string): Promise<{ clientId: stri
   }
 }
 
-type CookieReader = { get: (name: string) => { value: string } | undefined }
+function tokenFromRequest(req: NextRequest): string | undefined {
+  const fromCookies = req.cookies.get('client_session')?.value
+  if (fromCookies) return fromCookies
+
+  const raw = req.headers.get('cookie')
+  if (!raw) return undefined
+  const part = raw.split(';').map(s => s.trim()).find(s => s.startsWith('client_session='))
+  if (!part) return undefined
+  return decodeURIComponent(part.slice('client_session='.length))
+}
+
+async function sessionMatchesDb(clientId: string, tokenSv: number): Promise<boolean> {
+  const { data: client } = await supabaseAdmin
+    .from('clients')
+    .select('session_version')
+    .eq('id', clientId)
+    .single()
+
+  return !!client && tokenSv === toSessionVersion(client.session_version)
+}
 
 // Verifies the JWT signature then checks the session version against the DB.
 // Tokens issued before a password reset will have a stale sv and be rejected.
 export async function getClientSession(
-  cookieStore?: CookieReader,
+  req?: NextRequest,
 ): Promise<{ clientId: string } | null> {
-  const store = cookieStore ?? await cookies()
-  const token = store.get('client_session')?.value
-  if (!token) return null
+  const token = req
+    ? tokenFromRequest(req)
+    : (await cookies()).get('client_session')?.value
 
-  const payload = await verifyClientToken(token)
-  if (!payload) return null
+  if (token) {
+    const payload = await verifyClientToken(token)
+    if (payload && await sessionMatchesDb(payload.clientId, payload.sv)) {
+      return { clientId: payload.clientId }
+    }
+  }
 
-  const { data: client } = await supabaseAdmin
-    .from('clients')
-    .select('session_version')
-    .eq('id', payload.clientId)
-    .single()
+  const headerId = req?.headers.get(CLIENT_ID_HEADER)
+  if (headerId) {
+    const headerSv = toSessionVersion(req.headers.get(CLIENT_SV_HEADER))
+    if (await sessionMatchesDb(headerId, headerSv)) {
+      return { clientId: headerId }
+    }
+  }
 
-  if (!client) return null
-
-  if (payload.sv !== toSessionVersion(client.session_version)) return null
-
-  return { clientId: payload.clientId }
+  return null
 }

@@ -10,7 +10,7 @@ const PHONE_RE = /^[\d\s\-()+.]{7,20}$/
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getClientSession(req.cookies)
+    const session = await getClientSession(req)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const session = await getClientSession(req.cookies)
+    const session = await getClientSession(req)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { jwtVerify } from 'jose'
+import { CLIENT_ID_HEADER, CLIENT_SV_HEADER } from '@/lib/client-session-headers'
 
 const adminSecret = new TextEncoder().encode(process.env.ADMIN_JWT_SECRET!)
 const clientSecret = new TextEncoder().encode(process.env.CLIENT_JWT_SECRET!)
+
+function toSessionVersion(value: unknown): number {
+  const n = Number(value)
+  return Number.isInteger(n) && n > 0 ? n : 1
+}
 
 async function isValidAdmin(req: NextRequest): Promise<boolean> {
   const token = req.cookies.get('admin_session')?.value
@@ -16,15 +22,26 @@ async function isValidAdmin(req: NextRequest): Promise<boolean> {
   }
 }
 
-async function isValidClient(req: NextRequest): Promise<boolean> {
+async function getClientPayload(req: NextRequest): Promise<{ clientId: string; sv: number } | null> {
   const token = req.cookies.get('client_session')?.value
-  if (!token) return false
+  if (!token) return null
   try {
-    await jwtVerify(token, clientSecret)
-    return true
+    const { payload } = await jwtVerify(token, clientSecret)
+    const clientId = payload.clientId as string
+    if (!clientId) return null
+    return { clientId, sv: toSessionVersion(payload.sv) }
   } catch {
-    return false
+    return null
   }
+}
+
+function nextWithClientSession(req: NextRequest, session: { clientId: string; sv: number }) {
+  const requestHeaders = new Headers(req.headers)
+  requestHeaders.set(CLIENT_ID_HEADER, session.clientId)
+  requestHeaders.set(CLIENT_SV_HEADER, String(session.sv))
+  const res = NextResponse.next({ request: { headers: requestHeaders } })
+  res.headers.set('Cache-Control', 'private, no-store, max-age=0, must-revalidate')
+  return res
 }
 
 export async function middleware(req: NextRequest) {
@@ -43,8 +60,8 @@ export async function middleware(req: NextRequest) {
 
   // Already-logged-in clients: skip invite/login and go to the onboard home
   if (pathname === '/onboard/login' || pathname === '/onboard') {
-    const valid = await isValidClient(req)
-    if (valid) {
+    const session = await getClientPayload(req)
+    if (session) {
       return NextResponse.redirect(new URL('/onboard/home', req.url))
     }
     return NextResponse.next()
@@ -71,16 +88,14 @@ export async function middleware(req: NextRequest) {
     pathname === '/api/onboard/budget-audit' ||
     pathname.startsWith('/api/onboard/team')
   ) {
-    const valid = await isValidClient(req)
-    if (!valid) {
+    const session = await getClientPayload(req)
+    if (!session) {
       if (pathname.startsWith('/api/')) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       }
       return NextResponse.redirect(new URL('/onboard/login', req.url))
     }
-    const res = NextResponse.next()
-    res.headers.set('Cache-Control', 'private, no-store, max-age=0, must-revalidate')
-    return res
+    return nextWithClientSession(req, session)
   }
 
   return NextResponse.next()

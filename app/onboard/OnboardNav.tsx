@@ -27,6 +27,7 @@ export default function OnboardNav() {
           <Link
             key={item.href}
             href={item.href}
+            prefetch={false}
             className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               active
                 ? 'bg-white/15 text-white'

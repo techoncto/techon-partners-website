@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import type { Profile } from '../ProfileEditor'
+import { redirectToOnboardLogin } from '../redirectToLogin'
 
 interface Stats {
   answersCount: number
@@ -20,10 +21,12 @@ export default function OnboardHomePage() {
   useEffect(() => {
     let cancelled = false
     async function load() {
+      let expired = false
       try {
         const res = await fetch('/api/onboard/me', { credentials: 'include' })
         if (res.status === 401) {
-          window.location.href = '/onboard/login'
+          expired = true
+          await redirectToOnboardLogin()
           return
         }
         const data = await res.json()
@@ -38,7 +41,7 @@ export default function OnboardHomePage() {
       } catch {
         if (!cancelled) setError('Failed to load your account.')
       } finally {
-        if (!cancelled) setLoading(false)
+        if (!cancelled && !expired) setLoading(false)
       }
     }
     load()

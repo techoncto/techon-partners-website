@@ -13,7 +13,7 @@ function clampScore(value: unknown): number {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getClientSession(req.cookies)
+    const session = await getClientSession(req)
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await req.json() as {

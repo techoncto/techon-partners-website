@@ -25,7 +25,7 @@ const MEMBER_SELECT =
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getClientSession(req.cookies)
+    const session = await getClientSession(req)
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const [membersResult, orgResult, ratingsResult] = await Promise.all([
@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getClientSession(req.cookies)
+    const session = await getClientSession(req)
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await req.json() as { items: MemberInput[]; deletedIds?: unknown[] }

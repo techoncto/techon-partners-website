@@ -4,7 +4,7 @@ import { getClientSession } from '@/lib/auth'
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getClientSession(req.cookies)
+    const session = await getClientSession(req)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
