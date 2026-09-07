@@ -94,7 +94,7 @@ export async function getClientSession(
   }
 
   const headerId = req?.headers.get(CLIENT_ID_HEADER)
-  if (headerId) {
+  if (req && headerId) {
     const headerSv = toSessionVersion(req.headers.get(CLIENT_SV_HEADER))
     if (await sessionMatchesDb(headerId, headerSv)) {
       return { clientId: headerId }
