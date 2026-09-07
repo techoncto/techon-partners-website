@@ -14,7 +14,11 @@ export default function ProfilePage() {
     let cancelled = false
     async function load() {
       try {
-        const res = await fetch('/api/onboard/me')
+        const res = await fetch('/api/onboard/me', { credentials: 'include' })
+        if (res.status === 401) {
+          window.location.href = '/onboard/login'
+          return
+        }
         const data = await res.json()
         if (!res.ok) {
           if (!cancelled) setError(data.error ?? 'Failed to load your profile.')

@@ -5,6 +5,11 @@ import { supabaseAdmin } from '@/lib/supabase'
 const adminSecret = new TextEncoder().encode(process.env.ADMIN_JWT_SECRET!)
 const clientSecret = new TextEncoder().encode(process.env.CLIENT_JWT_SECRET!)
 
+function toSessionVersion(value: unknown): number {
+  const n = Number(value)
+  return Number.isInteger(n) && n > 0 ? n : 1
+}
+
 // ── Admin session ──────────────────────────────────────────────────────────────
 
 export async function signAdminToken(): Promise<string> {
@@ -33,7 +38,7 @@ export async function getAdminSession(): Promise<boolean> {
 // ── Client session ─────────────────────────────────────────────────────────────
 
 export async function signClientToken(clientId: string, sessionVersion: number): Promise<string> {
-  return new SignJWT({ clientId, sv: sessionVersion })
+  return new SignJWT({ clientId, sv: toSessionVersion(sessionVersion) })
     .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime('30d')
     .sign(clientSecret)
@@ -42,17 +47,22 @@ export async function signClientToken(clientId: string, sessionVersion: number):
 export async function verifyClientToken(token: string): Promise<{ clientId: string; sv: number } | null> {
   try {
     const { payload } = await jwtVerify(token, clientSecret)
-    return { clientId: payload.clientId as string, sv: payload.sv as number }
+    const sv = toSessionVersion(payload.sv)
+    return { clientId: payload.clientId as string, sv }
   } catch {
     return null
   }
 }
 
+type CookieReader = { get: (name: string) => { value: string } | undefined }
+
 // Verifies the JWT signature then checks the session version against the DB.
 // Tokens issued before a password reset will have a stale sv and be rejected.
-export async function getClientSession(): Promise<{ clientId: string } | null> {
-  const cookieStore = await cookies()
-  const token = cookieStore.get('client_session')?.value
+export async function getClientSession(
+  cookieStore?: CookieReader,
+): Promise<{ clientId: string } | null> {
+  const store = cookieStore ?? await cookies()
+  const token = store.get('client_session')?.value
   if (!token) return null
 
   const payload = await verifyClientToken(token)
@@ -64,7 +74,9 @@ export async function getClientSession(): Promise<{ clientId: string } | null> {
     .eq('id', payload.clientId)
     .single()
 
-  if (!client || client.session_version !== payload.sv) return null
+  if (!client) return null
+
+  if (payload.sv !== toSessionVersion(client.session_version)) return null
 
   return { clientId: payload.clientId }
 }

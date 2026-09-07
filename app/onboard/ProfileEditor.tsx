@@ -129,11 +129,16 @@ export default function ProfileEditor({
     try {
       const res = await fetch('/api/onboard/me', {
         method: 'PATCH',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           firstName, lastName, phone, companyName, address, address2, city, state, zip, country,
         }),
       })
+      if (res.status === 401) {
+        window.location.href = '/onboard/login'
+        return
+      }
       const data = await res.json()
       if (!res.ok) {
         setSaveError(data.error ?? 'Failed to save.')

@@ -38,8 +38,12 @@ export default function ProfileDrawer({
     let cancelled = false
     setLoading(true)
     setError('')
-    fetch('/api/onboard/me')
+    fetch('/api/onboard/me', { credentials: 'include' })
       .then(async res => {
+        if (res.status === 401) {
+          window.location.href = '/onboard/login'
+          return
+        }
         const data = await res.json()
         if (!res.ok) throw new Error(data.error ?? 'Failed to load profile.')
         if (!cancelled) setProfile(data.profile)

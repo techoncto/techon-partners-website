@@ -23,9 +23,9 @@ function toIntId(value: unknown): number | null {
 const MEMBER_SELECT =
   'id, team, department, role, resource, hours_per_week, responsibilities, software_used, reports_to, display_order'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const session = await getClientSession()
+    const session = await getClientSession(req.cookies)
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const [membersResult, orgResult, ratingsResult] = await Promise.all([
@@ -73,7 +73,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getClientSession()
+    const session = await getClientSession(req.cookies)
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await req.json() as { items: MemberInput[]; deletedIds?: unknown[] }

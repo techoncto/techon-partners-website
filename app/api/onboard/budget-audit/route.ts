@@ -19,9 +19,9 @@ function toIntId(value: unknown): number | null {
   return Number.isInteger(n) && n > 0 ? n : null
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const session = await getClientSession()
+    const session = await getClientSession(req.cookies)
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { data, error } = await supabaseAdmin
@@ -44,7 +44,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getClientSession()
+    const session = await getClientSession(req.cookies)
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await req.json() as { items: ItemInput[]; deletedIds?: unknown[] }

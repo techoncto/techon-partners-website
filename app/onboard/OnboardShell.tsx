@@ -27,9 +27,13 @@ export default function OnboardShell({ children }: { children: React.ReactNode }
   useEffect(() => {
     if (!showSidebar) return
     let cancelled = false
-    fetch('/api/onboard/me')
-      .then(res => res.json())
-      .then(data => {
+    fetch('/api/onboard/me', { credentials: 'include' })
+      .then(async res => {
+        if (res.status === 401) {
+          window.location.href = '/onboard/login'
+          return
+        }
+        const data = await res.json()
         if (!cancelled && data.profile) setProfile(data.profile)
       })
       .catch(() => {})

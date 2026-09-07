@@ -7,3 +7,13 @@
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+[[headers]]
+  for = "/onboard/*"
+  [headers.values]
+    Cache-Control = "private, no-store, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/api/onboard/*"
+  [headers.values]
+    Cache-Control = "private, no-store, max-age=0, must-revalidate"

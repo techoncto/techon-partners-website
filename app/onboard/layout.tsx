@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import Script from 'next/script'
 import OnboardShell from './OnboardShell'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'Client Onboarding | Techon Partners',
   robots: { index: false, follow: false },

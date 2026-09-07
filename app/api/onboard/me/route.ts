@@ -8,9 +8,9 @@ const PROFILE_SELECT =
 
 const PHONE_RE = /^[\d\s\-()+.]{7,20}$/
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const session = await getClientSession()
+    const session = await getClientSession(req.cookies)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -62,7 +62,7 @@ export async function GET() {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const session = await getClientSession()
+    const session = await getClientSession(req.cookies)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

@@ -78,6 +78,9 @@ export async function middleware(req: NextRequest) {
       }
       return NextResponse.redirect(new URL('/onboard/login', req.url))
     }
+    const res = NextResponse.next()
+    res.headers.set('Cache-Control', 'private, no-store, max-age=0, must-revalidate')
+    return res
   }
 
   return NextResponse.next()
