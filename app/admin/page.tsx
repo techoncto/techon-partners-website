@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import BrandLogo from '@/components/layout/BrandLogo'
 import { formatAnswerValue } from '@/lib/onboard-emails'
 
 // ── Types ──────────────────────────────────────────────────────
@@ -147,7 +148,9 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
     <div className="min-h-screen bg-slate-100 flex flex-col">
       {/* Same top nav as the dashboard */}
       <header className="bg-navy-900 h-16 px-6 flex items-center gap-3">
-        <Link href="/" className="text-white font-semibold text-lg tracking-tight hover:text-slate-300 transition-colors cursor-pointer">Techon Partners</Link>
+        <Link href="/" className="flex items-center gap-2 cursor-pointer" aria-label="Techon Partners – Home">
+          <BrandLogo onDark />
+        </Link>
         <span className="text-slate-400 text-sm">/ Admin Portal</span>
       </header>
 
@@ -1019,7 +1022,9 @@ function Dashboard() {
       {/* Top nav */}
       <header className="bg-navy-900 h-16 px-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href="/" className="text-white font-semibold text-lg tracking-tight hover:text-slate-300 transition-colors cursor-pointer">Techon Partners</Link>
+          <Link href="/" className="flex items-center gap-2 cursor-pointer" aria-label="Techon Partners – Home">
+            <BrandLogo onDark />
+          </Link>
           <span className="text-slate-400 text-sm">/ Admin Portal</span>
         </div>
         <button onClick={handleLogout} className="text-sm text-slate-400 hover:text-white transition-colors">

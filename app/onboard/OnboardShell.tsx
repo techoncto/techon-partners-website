@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import BrandLogo from '@/components/layout/BrandLogo'
 import OnboardNav from './OnboardNav'
 import ProfileDrawer from './ProfileDrawer'
 import type { Profile } from './ProfileEditor'
@@ -49,7 +50,9 @@ export default function OnboardShell({ children }: { children: React.ReactNode }
     <div className={`bg-slate-50 flex flex-col ${isForm ? 'h-dvh overflow-hidden' : 'min-h-dvh'}`}>
       <header className="bg-navy-900 h-16 px-6 flex items-center justify-between shrink-0 z-20">
         <div className="flex items-center gap-3">
-          <Link href="/" className="text-white font-semibold text-lg tracking-tight hover:text-slate-300 transition-colors cursor-pointer">Techon Partners</Link>
+          <Link href="/" className="flex items-center gap-2 cursor-pointer" aria-label="Techon Partners – Home">
+            <BrandLogo onDark />
+          </Link>
           {showSidebar ? (
             <Link href="/onboard/home" className="text-slate-400 text-sm hover:text-slate-200 transition-colors cursor-pointer">
               / Client Onboarding
