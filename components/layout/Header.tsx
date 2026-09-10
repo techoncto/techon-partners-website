@@ -61,6 +61,13 @@ export default function Header() {
           >
             Book a Call
           </Link>
+          <span className="w-px h-4 bg-slate-200" aria-hidden />
+          <Link
+            href="/onboard/login"
+            className="text-sm font-medium text-slate-400 hover:text-slate-600 transition-colors"
+          >
+            Client Login
+          </Link>
         </div>
 
         {/* Mobile hamburger */}
@@ -112,13 +119,22 @@ export default function Header() {
                 </li>
               );
             })}
-            <li className="pt-2 pb-1">
+            <li className="pt-2">
               <Link
                 href="/contact"
                 onClick={() => setMobileOpen(false)}
                 className="block w-full text-center px-4 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
               >
                 Book a Call
+              </Link>
+            </li>
+            <li className="pb-1">
+              <Link
+                href="/onboard/login"
+                onClick={() => setMobileOpen(false)}
+                className="block w-full text-center px-4 py-1.5 text-sm font-medium text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                Client Login
               </Link>
             </li>
           </ul>

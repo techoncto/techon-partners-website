@@ -10,6 +10,7 @@ const footerLinks = {
     { label: "About", href: "/about" },
     { label: "Services", href: "/services" },
     { label: "Contact", href: "/contact" },
+    { label: "Client Login", href: "/onboard/login" },
   ],
 };
 

@@ -1,6 +1,19 @@
 [build]
-  command = "npm run build"
+  command = "NEXT_PUBLIC_SITE_URL=$DEPLOY_PRIME_URL npm run build"
   publish = ".next"
+
+[build.environment]
+  SECRETS_SCAN_OMIT_PATHS = ".netlify/.next/cache"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+[[headers]]
+  for = "/onboard/*"
+  [headers.values]
+    Cache-Control = "private, no-store, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/api/onboard/*"
+  [headers.values]
+    Cache-Control = "private, no-store, max-age=0, must-revalidate"

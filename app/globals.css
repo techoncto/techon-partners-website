@@ -39,6 +39,26 @@
   box-sizing: border-box;
 }
 
+@layer base {
+  button {
+    cursor: pointer;
+  }
+
+  /* Google Places suggestions dropdown */
+  .google-places-container {
+    position: relative;
+  }
+
+  /* Remove browser autofill highlight decoration on password/text fields */
+  input:autofill,
+  input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px white inset !important;
+    box-shadow: 0 0 0 1000px white inset !important;
+    -webkit-text-fill-color: #0F172A !important;
+    transition: background-color 9999s ease-in-out 0s;
+  }
+}
+
 html {
   scroll-behavior: smooth;
 }
