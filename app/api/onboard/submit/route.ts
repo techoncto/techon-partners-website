@@ -11,6 +11,8 @@ import {
 } from '@/lib/onboard-emails'
 
 import type { Question } from '@/lib/types'
+import { getSiteUrl } from '@/lib/site-url'
+import { getEmailLogoAttachment } from '@/lib/email-logo'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -197,8 +199,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Questionnaire already submitted.', alreadySubmitted: true }, { status: 409 })
     }
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? new URL(req.url).origin
+    const siteUrl = getSiteUrl(req)
     const sections = await loadAnswerSections(session.clientId)
+    const logoAttachment = await getEmailLogoAttachment()
 
     const { error: emailError } = await resend.emails.send({
       from: 'Techon Partners <onboarding@techonpartners.com>',
@@ -209,6 +212,7 @@ export async function POST(req: NextRequest) {
         firstName: submittedClient.first_name,
         siteUrl,
       }),
+      ...(logoAttachment ? { attachments: [logoAttachment] } : {}),
     })
 
     if (emailError) {

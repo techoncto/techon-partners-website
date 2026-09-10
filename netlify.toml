@@ -1,9 +1,24 @@
 [build]
-  command = "NEXT_PUBLIC_SITE_URL=$DEPLOY_PRIME_URL npm run build"
+  command = "npm run build"
   publish = ".next"
 
 [build.environment]
   SECRETS_SCAN_OMIT_PATHS = ".netlify/.next/cache"
+
+# Production must use the real site URL (custom domain / URL), not DEPLOY_PRIME_URL.
+# DEPLOY_PRIME_URL on main is https://main--….netlify.app, which breaks emails and login links.
+[context.production]
+  command = "NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-$URL} npm run build"
+
+# Preview/branch deploys keep their own URL so testing still works.
+[context.deploy-preview]
+  command = "NEXT_PUBLIC_SITE_URL=$DEPLOY_PRIME_URL npm run build"
+
+[context.branch-deploy]
+  command = "NEXT_PUBLIC_SITE_URL=$DEPLOY_PRIME_URL npm run build"
+
+[functions]
+  included_files = ["public/logo.png"]
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"

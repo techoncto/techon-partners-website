@@ -3,6 +3,8 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { Resend } from 'resend'
 import { checkRateLimit } from '@/lib/rateLimit'
 import { escapeHtml } from '@/lib/onboard-emails'
+import { getSiteUrl } from '@/lib/site-url'
+import { emailLogoSrc, getEmailLogoAttachment } from '@/lib/email-logo'
 import crypto from 'crypto'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -50,8 +52,10 @@ export async function POST(req: NextRequest) {
         .from('password_resets')
         .insert({ client_id: client.id, token, expires_at: expiresAt })
 
-      const siteUrl   = process.env.NEXT_PUBLIC_SITE_URL ?? new URL(req.url).origin
+      const siteUrl   = getSiteUrl(req)
       const resetLink = `${siteUrl}/onboard/reset-password?token=${token}`
+
+      const logo = await getEmailLogoAttachment()
 
       await resend.emails.send({
         from:     'Techon Partners <noreply@techonpartners.com>',
@@ -59,6 +63,7 @@ export async function POST(req: NextRequest) {
         to:       normalised,
         subject:  'Reset your Techon Partners password',
         html:     buildResetEmail({ firstName: client.first_name ?? '', resetLink, siteUrl }),
+        ...(logo ? { attachments: [logo] } : {}),
       })
     }
 
@@ -82,7 +87,7 @@ function buildResetEmail({
   const safeName = escapeHtml(firstName)
   const safeSiteUrl = escapeHtml(siteUrl)
   const safeResetLink = escapeHtml(resetLink)
-  const logoUrl = escapeHtml(`${siteUrl}/logo.png`)
+  const logoUrl = emailLogoSrc()
 
   return `<!DOCTYPE html>
 <html lang="en">

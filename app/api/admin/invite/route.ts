@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { escapeHtml } from '@/lib/onboard-emails'
+import { getSiteUrl } from '@/lib/site-url'
+import { emailLogoSrc, getEmailLogoAttachment } from '@/lib/email-logo'
 import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -50,8 +52,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to create invitation.', detail: insertError?.message }, { status: 500 })
     }
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? new URL(req.url).origin
+    const siteUrl = getSiteUrl(req)
     const inviteLink = `${siteUrl}/onboard?code=${token.code}`
+    const logo = await getEmailLogoAttachment()
 
     // Send invite email
     const { data: emailData, error: emailError } = await resend.emails.send({
@@ -59,6 +62,7 @@ export async function POST(req: NextRequest) {
       to: clientEmail.trim(),
       subject: 'Your Techon Partners Onboarding Invitation',
       html: buildEmailHtml({ clientName: clientName.trim(), code: token.code, inviteLink, siteUrl }),
+      ...(logo ? { attachments: [logo] } : {}),
     })
 
     if (emailError) {
@@ -119,7 +123,7 @@ function buildEmailHtml({
   const safeSiteUrl = escapeHtml(siteUrl)
   const safeInviteLink = escapeHtml(inviteLink)
   const onboardUrl = escapeHtml(`${siteUrl}/onboard`)
-  const logoUrl = escapeHtml(`${siteUrl}/logo.png`)
+  const logoUrl = emailLogoSrc()
 
   return `<!DOCTYPE html>
 <html lang="en">
