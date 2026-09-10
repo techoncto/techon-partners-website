@@ -87,7 +87,7 @@ export default function TeamPage() {
   const [ratings, setRatings] = useState<Rating[]>([])
   const [orgChart, setOrgChart] = useState<OrgChartMeta | null>(null)
   const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null)
-  const [openCategory, setOpenCategory] = useState<string>(SKILL_CATALOG[0].id)
+  const [openCategories, setOpenCategories] = useState<string[]>([SKILL_CATALOG[0].id])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [savingSkills, setSavingSkills] = useState(false)
@@ -274,8 +274,8 @@ export default function TeamPage() {
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
         <h1 className="text-xl font-bold text-navy-900 mb-2">Team Resources</h1>
         <p className="text-sm text-slate-500 max-w-3xl leading-relaxed">
-          Add each person on the team (or TBD / agency). Then complete the Skills Matrix for those
-          people — the CEO or manager can fill it in; individual logins are not required.
+          First add each person on the team (or TBD / agency) and save. Then open the Skills Matrix
+          and rate each person. The CEO or manager can fill it in — individual logins are not required.
         </p>
       </div>
 
@@ -338,15 +338,18 @@ export default function TeamPage() {
 
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div className="overflow-auto max-h-[min(32rem,calc(100vh-22rem))]">
-              <table className="w-full text-sm min-w-[1280px]">
+              <table className="w-full text-sm min-w-[86rem]">
                 <thead className="sticky top-0 z-10">
                   <tr className="border-b border-slate-100 bg-slate-50">
-                    {['Team', 'Department', 'Role', 'Resource', 'Hours/Week', 'Responsibilities', 'Software Used', 'Reports To'].map(h => (
-                      <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                        {h}
-                      </th>
-                    ))}
-                    <th className="w-10 px-2 py-3" />
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap min-w-[8rem]">Team</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap min-w-[9rem]">Department</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap min-w-[16rem]">Role</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap min-w-[11rem]">Resource</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap w-28">Hours/Week</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap min-w-[12rem]">Responsibilities</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap min-w-[11rem]">Software Used</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap min-w-[11rem]">Reports To</th>
+                    <th className="w-12 px-3 py-3" />
                   </tr>
                 </thead>
                 <tbody>
@@ -362,13 +365,13 @@ export default function TeamPage() {
                       <td className="px-4 py-2.5">
                         <input value={row.department} onChange={e => update(row._key, 'department', e.target.value)} placeholder="e.g. Engineering" className={inputClass} />
                       </td>
-                      <td className="px-4 py-2.5">
+                      <td className="px-4 py-2.5 min-w-[16rem]">
                         <input value={row.role} onChange={e => update(row._key, 'role', e.target.value)} placeholder="e.g. CTO" className={inputClass} />
                       </td>
                       <td className="px-4 py-2.5">
                         <input value={row.resource} onChange={e => update(row._key, 'resource', e.target.value)} placeholder="Name, Agency, or TBD" className={inputClass} />
                       </td>
-                      <td className="px-4 py-2.5">
+                      <td className="px-4 py-2.5 w-28">
                         <input
                           type="number"
                           min="0"
@@ -376,7 +379,7 @@ export default function TeamPage() {
                           value={row.hours_per_week}
                           onChange={e => update(row._key, 'hours_per_week', e.target.value)}
                           placeholder="40"
-                          className={`${inputClass} tabular-nums w-24`}
+                          className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-navy-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white placeholder-slate-300 tabular-nums"
                         />
                       </td>
                       <td className="px-4 py-2.5">
@@ -388,7 +391,7 @@ export default function TeamPage() {
                       <td className="px-4 py-2.5">
                         <input value={row.reports_to} onChange={e => update(row._key, 'reports_to', e.target.value)} placeholder="e.g. CEO" className={inputClass} />
                       </td>
-                      <td className="px-2 py-2.5 text-center">
+                      <td className="px-3 py-2.5 pr-5 text-center">
                         <button onClick={() => removeRow(row._key)} title="Remove row" className="text-slate-300 hover:text-red-400 text-lg font-light leading-none">
                           ✕
                         </button>
@@ -419,11 +422,36 @@ export default function TeamPage() {
       )}
 
       {tab === 'skills' && (
+        <div className="space-y-4">
+          {savedMembers.length > 0 && (
+            <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5">
+              <h2 className="text-sm font-semibold text-navy-900 mb-3">How to use the Skills Matrix</h2>
+              <ol className="text-sm text-slate-600 space-y-1.5 list-decimal list-inside mb-4">
+                <li>Select a person in the list on the left.</li>
+                <li>Open a skill category and score that person on each skill that applies. Leave unrelated skills at 0.</li>
+                <li>Click <span className="font-medium text-navy-800">Save skills</span>, then repeat for the next person.</li>
+              </ol>
+              <div className="grid sm:grid-cols-3 gap-3 text-xs text-slate-600">
+                <div className="bg-white/80 rounded-xl border border-blue-100 p-3">
+                  <p className="font-semibold text-navy-900 mb-1">Proficiency (0–2)</p>
+                  <p>0 = none · 1 = some experience · 2 = can do this work independently</p>
+                </div>
+                <div className="bg-white/80 rounded-xl border border-blue-100 p-3">
+                  <p className="font-semibold text-navy-900 mb-1">Interest (0–2)</p>
+                  <p>0 = not interested · 1 = willing · 2 = wants to do this work</p>
+                </div>
+                <div className="bg-white/80 rounded-xl border border-blue-100 p-3">
+                  <p className="font-semibold text-navy-900 mb-1">Team coverage</p>
+                  <p>A person counts when both scores are 2. Green means two or more people can cover that skill.</p>
+                </div>
+              </div>
+            </div>
+          )}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           {savedMembers.length === 0 ? (
             <div className="p-10 text-center">
               <p className="text-sm text-slate-500 mb-4">
-                Save at least one person on Team Resources first. The skills matrix is filled out for those people by the CEO or manager.
+                Add people on Team Resources and click Save first. Then come back here and rate each person&apos;s skills.
               </p>
               <button onClick={() => setTab('resources')} className="text-sm font-medium text-blue-600 hover:underline">
                 Go to Team Resources
@@ -449,9 +477,20 @@ export default function TeamPage() {
               <div className="flex-1 flex flex-col min-w-0">
                 <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between gap-3">
                   <p className="text-sm text-slate-500">
-                    Rate proficiency and interest 0–2. Coverage uses people at <span className="font-medium text-navy-800">2,2 or higher</span>.
+                    Scoring the selected person. Remember to save before switching people.
                   </p>
                   <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setOpenCategories(
+                        openCategories.length === SKILL_CATALOG.length
+                          ? []
+                          : SKILL_CATALOG.map(c => c.id)
+                      )}
+                      className="text-sm font-medium text-slate-500 hover:text-navy-900"
+                    >
+                      {openCategories.length === SKILL_CATALOG.length ? 'Collapse all' : 'Expand all'}
+                    </button>
                     {savedMsg && <span className="text-sm text-green-600 font-medium">{savedMsg}</span>}
                     <button
                       onClick={() => void saveSkills()}
@@ -466,20 +505,22 @@ export default function TeamPage() {
                   {SKILL_CATALOG.map(cat => (
                     <div key={cat.id} className="border border-slate-100 rounded-xl overflow-hidden">
                       <button
-                        onClick={() => setOpenCategory(open => (open === cat.id ? '' : cat.id))}
+                        onClick={() => setOpenCategories(open => (
+                          open.includes(cat.id) ? open.filter(id => id !== cat.id) : [...open, cat.id]
+                        ))}
                         className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 text-left"
                       >
                         <span className="text-sm font-semibold text-navy-900">{cat.name}</span>
-                        <span className="text-slate-400 text-xs">{openCategory === cat.id ? 'Hide' : 'Show'}</span>
+                        <span className="text-slate-400 text-xs">{openCategories.includes(cat.id) ? 'Hide' : 'Show'}</span>
                       </button>
-                      {openCategory === cat.id && selectedMemberId != null && (
-                        <table className="w-full text-sm">
+                      {openCategories.includes(cat.id) && selectedMemberId != null && (
+                        <table className="text-sm w-max min-w-full">
                           <thead>
                             <tr className="border-b border-slate-100">
-                              <th className="text-left px-4 py-2 text-xs font-semibold text-slate-500">Skill</th>
-                              <th className="text-left px-4 py-2 text-xs font-semibold text-slate-500 w-28">Proficiency</th>
-                              <th className="text-left px-4 py-2 text-xs font-semibold text-slate-500 w-28">Interest</th>
-                              <th className="text-left px-4 py-2 text-xs font-semibold text-slate-500 w-44">Team coverage</th>
+                              <th className="text-left px-4 py-2 text-xs font-semibold text-slate-500 whitespace-nowrap">Skill</th>
+                              <th className="text-left px-4 py-2 text-xs font-semibold text-slate-500 whitespace-nowrap min-w-[13.5rem]">Proficiency</th>
+                              <th className="text-left px-4 py-2 text-xs font-semibold text-slate-500 whitespace-nowrap min-w-[14.5rem]">Interest</th>
+                              <th className="text-left px-4 py-2 text-xs font-semibold text-slate-500 whitespace-nowrap min-w-[12rem]">Team coverage</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -490,30 +531,30 @@ export default function TeamPage() {
                               return (
                                 <tr key={skill.id} className="border-b border-slate-50 last:border-0">
                                   <td className="px-4 py-2 text-navy-800">{skill.name}</td>
-                                  <td className="px-4 py-2">
+                                  <td className="px-4 py-2 whitespace-nowrap">
                                     <select
                                       value={rating.proficiency}
                                       onChange={e => setScore(selectedMemberId, skill.id, 'proficiency', Number(e.target.value))}
-                                      className={inputClass}
+                                      className={`${inputClass} min-w-[12.5rem]`}
                                     >
-                                      <option value={0}>0</option>
-                                      <option value={1}>1</option>
-                                      <option value={2}>2</option>
+                                      <option value={0}>0 — None</option>
+                                      <option value={1}>1 — Some</option>
+                                      <option value={2}>2 — Independent</option>
                                     </select>
                                   </td>
-                                  <td className="px-4 py-2">
+                                  <td className="px-4 py-2 whitespace-nowrap">
                                     <select
                                       value={rating.interest}
                                       onChange={e => setScore(selectedMemberId, skill.id, 'interest', Number(e.target.value))}
-                                      className={inputClass}
+                                      className={`${inputClass} min-w-[13.5rem]`}
                                     >
-                                      <option value={0}>0</option>
-                                      <option value={1}>1</option>
-                                      <option value={2}>2</option>
+                                      <option value={0}>0 — Not interested</option>
+                                      <option value={1}>1 — Willing</option>
+                                      <option value={2}>2 — Eager</option>
                                     </select>
                                   </td>
-                                  <td className="px-4 py-2">
-                                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${style.className}`}>
+                                  <td className="px-4 py-2 whitespace-nowrap">
+                                    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${style.className}`}>
                                       {style.label}
                                     </span>
                                   </td>
@@ -529,6 +570,7 @@ export default function TeamPage() {
               </div>
             </div>
           )}
+        </div>
         </div>
       )}
     </div>
