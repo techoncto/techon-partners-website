@@ -1,4 +1,5 @@
 import Link from "next/link";
+import BrandLogo from "./BrandLogo";
 
 const footerLinks = {
   Services: [
@@ -25,15 +26,10 @@ export default function Footer() {
           <div className="md:col-span-2 space-y-4">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 group"
+              className="inline-flex items-center gap-2"
               aria-label="Techon Partners – Home"
             >
-              <span className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-xs shrink-0 tracking-tight">
-                TP
-              </span>
-              <span className="font-semibold text-white text-sm tracking-tight">
-                Techon<span className="text-blue-400">Partners</span>
-              </span>
+              <BrandLogo onDark size="md" />
             </Link>
             <p className="text-xs font-semibold tracking-widest uppercase text-blue-500/70 mt-1">
               Strategic Technology Leadership
