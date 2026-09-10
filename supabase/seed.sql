@@ -116,18 +116,20 @@ insert into questions (id, category_id, label, answer_type, help_text, required,
 overriding system value values
 
   -- Part 1: Company Past, Present, and Future (category 1)
-  (1,  1, 'What is a high-level history of the company? Who started it and why? What''s happened since its inception?',
+  (1,  1, 'What is a high-level history of the company? Who started it, why, and what has happened since?',
        'textarea', null, true, 1),
 
-  (2,  1, 'Which of the 5 Stages of Business is the company currently in, per 90 Day Year? If you think you''re between two stages, pick the lower stage as that defines where the bottleneck is for your business growth.',
-       'dropdown', null, true, 2),
+  (2,  1, 'Which of the 5 Stages of Business is the company in today? If you are between two stages, pick the lower one.',
+       'dropdown',
+       E'From Todd Herman’s 90 Day Year. Read the full article at https://www.90dayyear.com/the-five-stages-of-business/\n\nStart Up: validating the offer, audience, pricing, and business model.\nRamp Up: customers have started, but sales are still inconsistent. Focus on marketing and sales systems.\nBuild Up: revenue is consistent. Build operational systems and get work off your plate.\nScale Up: the business can grow without breaking. Develop leaders, team, and culture.\nLeader Up: you are a market leader. Protect the position through leadership, innovation, and acquisitions.',
+       true, 2),
 
-  (3,  1, 'If we were to meet two years from today and you were thrilled with the success you made both personally and professionally in your business, what would that look like? Paint a crystal clear picture of 2 years from today. What is different in the business? Be as specific as possible, with revenue and product/service mix defined so we can track success.',
+  (3,  1, 'If we met two years from today and you were thrilled with the business — personally and professionally — what would that look like? Be specific about revenue, product/service mix, and what is different.',
        'textarea',
        'Example: We refactored our core software platform, improving performance by 50% while reducing hosting costs. We built a strategic partnership with a key vendor, driving a 30% revenue increase.',
        true, 3),
 
-  (4,  1, 'How big do you ultimately want the company to get? Are you willing to do what it takes to get there?',
+  (4,  1, 'How big do you ultimately want the company to get, and are you willing to do what it takes to get there?',
        'textarea', null, true, 4),
 
   (5,  1, 'What''s your plan to grow the company? (Check all that apply)',
@@ -138,9 +140,11 @@ overriding system value values
   (7,  2, 'Preferred method of communication — Urgent matters',   'dropdown', null, false, 2),
   (8,  2, 'Preferred method of communication — Non-urgent matters','dropdown', null, false, 3),
 
-  (9,  2, 'Do you have a strategic plan for the business?',       'radio',    null, true,  4),
+  (9,  2, 'Do you have a strategic plan for the business?',       'radio',    'A written plan covering direction, priorities, and how you will get there — not just a vision in your head.', true,  4),
   (10, 2, 'How many hours a week are you working?',               'number',   null, false, 5),
-  (11, 2, 'What is your Unique Ability?',                         'textarea', null, false, 6),
+  (11, 2, 'What is your Unique Ability?',                         'textarea',
+       E'Your Unique Ability is the work you are unusually good at, energized by, and that creates the most value — not a job title.\n\nIf you have a Strategic Coach Unique Ability statement, paste it here. Otherwise describe it in your own words.',
+       false, 6),
 
   (12, 2, 'What is your Kolbe A-Index score? (4-digit score from kolbe.com)',
        'text', 'Take the 30-min Kolbe A-Index assessment at kolbe.com if you haven''t already.', false, 7),
@@ -149,35 +153,35 @@ overriding system value values
        'text', null, false, 8),
 
   -- Part 2: Key Person Risk (category 3)
-  (14, 3, 'Please identify any technology processes and business processes that are dependent on specific individuals. What processes break if a certain person in the organization is unavailable?',
+  (14, 3, 'Which technology or business processes depend on a specific person? What breaks if that person is unavailable?',
        'textarea', null, false, 1),
 
   (15, 3, 'How well-documented are your critical IT processes and systems?',
-       'textarea', null, false, 2),
+       'textarea', 'A rough sense is fine — from "it''s in someone''s head" to written runbooks.', false, 2),
 
   (16, 3, 'Do you have a succession plan in place for key technology roles?',
        'textarea', null, false, 3),
 
   -- Part 2: Systems Risk (category 4)
-  (17, 4, 'Please identify tech processes or systems dependent on a specific provider or system. What goes down if a vendor has an outage?',
+  (17, 4, 'Which tech processes or systems depend on a single vendor or platform? What goes down if that vendor has an outage?',
        'textarea', null, false, 1),
 
   (18, 4, 'How do you evaluate the reliability and security of third-party providers before integrating them into your tech stack?',
        'textarea', null, false, 2),
 
-  (19, 4, 'What is your company''s incident response plan in the event of a major outage or security breach? When was this plan last tested or updated?',
+  (19, 4, 'What is the incident response plan for a major outage or security breach, and when was it last tested or updated?',
        'textarea', null, false, 3),
 
-  (20, 4, 'How do you monitor the performance and availability of critical systems? What alerts or notifications are in place to quickly detect issues?',
+  (20, 4, 'How do you monitor performance and availability of critical systems, and what alerts notify you when something is wrong?',
        'textarea', null, false, 4),
 
-  (21, 4, 'Have you conducted any recent vulnerability assessments or penetration testing on your technology infrastructure? If so, what were the key findings and how were they addressed?',
+  (21, 4, 'Have you done recent vulnerability assessments or penetration testing? If so, what were the key findings and how were they addressed?',
        'textarea', null, false, 5),
 
-  (22, 4, 'Do you have a formal process for evaluating and implementing security patches and updates across your systems? How often are these performed?',
+  (22, 4, 'How are security patches and updates evaluated and applied, and how often?',
        'textarea', null, false, 6),
 
-  (23, 4, 'What encryption and security controls are in place to protect sensitive data, both at rest and in transit?',
+  (23, 4, 'What encryption and security controls protect sensitive data, both at rest and in transit?',
        'textarea', null, false, 7),
 
   -- Part 2: Operational Risk (category 5)
@@ -191,22 +195,22 @@ overriding system value values
        'textarea', null, false, 3),
 
   (27, 5, 'What levels of redundancy exist in your backups?',
-       'textarea', null, false, 4),
+       'textarea', 'For example a second backup copy, offsite storage, or a different provider.', false, 4),
 
   (28, 5, 'Who has login credentials for all key accounts?',
        'textarea', null, false, 5),
 
-  (29, 5, 'How are passwords managed? Do you use any shared logins? If so, for which systems? How is access to these passwords managed?',
+  (29, 5, 'How are passwords managed? Do you use shared logins, and if so for which systems and who can access those passwords?',
        'textarea', null, false, 6),
 
-  (30, 5, 'Do the right people in the organization have administrative access to critical systems? What policies are in place for this?',
+  (30, 5, 'Do the right people have admin access to critical systems, and what policy governs that?',
        'textarea', null, false, 7),
 
   (31, 5, 'Are any key accounts (e.g. hosting, domains, project management software) owned by individuals, versus the company?',
        'textarea', null, false, 8),
 
   (32, 5, 'Are there any accounts outside of the company''s control?',
-       'textarea', null, false, 9);
+       'textarea', 'For example a domain, hosting account, or SaaS tool in a contractor''s or employee''s personal account.', false, 9);
 
 -- Sync identity sequence
 select setval(pg_get_serial_sequence('questions', 'id'), 32);
@@ -216,8 +220,8 @@ select setval(pg_get_serial_sequence('questions', 'id'), 32);
 insert into question_options (question_id, label, display_order, follow_up_prompt) values
   -- Q2: 5 Stages of Business
   (2, 'Start Up',  1, null),
-  (2, 'Build Up',  2, null),
-  (2, 'Ramp Up',   3, null),
+  (2, 'Ramp Up',   2, null),
+  (2, 'Build Up',  3, null),
   (2, 'Scale Up',  4, null),
   (2, 'Leader Up', 5, null),
 
@@ -307,7 +311,7 @@ overriding system value values
   (42, 9, 'What manual processes are you currently doing that you''d like to automate as the company grows?',
    'textarea', null, false, 1),
 
-  (43, 9, 'Are there any integration issues or lack of interoperability between existing systems that are causing data silos, duplicate data entry, or process inefficiencies?',
+  (43, 9, 'Are integration issues between systems causing data silos, duplicate data entry, or extra work?',
    'textarea', null, false, 2),
 
   (44, 9, 'Describe some of the technology challenges you anticipate as your customer base expands (e.g., invoicing, support, onboarding).',
@@ -319,7 +323,7 @@ overriding system value values
   (46, 9, 'What are the most common complaints or pain points from end-users regarding the current technology tools and systems?',
    'textarea', null, false, 5),
 
-  (47, 9, 'Are there any specific technology limitations holding back your sales, marketing, or customer service efforts (e.g., lack of e-commerce capabilities, limited marketing automation, etc.)?',
+  (47, 9, 'Are technology limitations holding back sales, marketing, or customer service (e.g. e-commerce, marketing automation, or support tools)?',
    'textarea', null, false, 6),
 
   (48, 9, 'How do you currently handle data synchronization and consistency across different departments and systems?',
@@ -334,28 +338,28 @@ overriding system value values
   -- Part 3: Unclog — Operations (category 10)
   -- Org chart, roster, and skills matrix are collected on /onboard/team
   (53, 10,
-   'Do you have someone you trust to actually build and ship technical work — product development, engineering, or website updates — who is also a good culture fit? If yes, who are they (one person, a team of developers, a freelancer, or an agency)?',
+   'Do you have someone you trust to build and ship technical work who is also a good culture fit? If yes, who are they — one person, a team, a freelancer, or an agency?',
    'textarea',
    'This is about people who write code or update the product/site, not a CTO title by itself, and not IT helpdesk or QA unless they also do that build work.',
    false, 1),
 
   (54, 10,
-   'Do you have a tech team budget? Do you have a budget to bring in additional tech talent if needed?',
+   'Do you have a budget for the current tech team, and for additional talent if needed?',
    'textarea', null, false, 2),
 
   (55, 10,
    'Do you have a quarterly plan?',
-   'textarea', null, false, 3),
+   'textarea', 'A written 90-day plan with priorities and owners, not just a list of meetings.', false, 3),
 
   (56, 10,
-   'Please securely share the login credentials for all core technologies and software.',
+   'How should we receive access to core systems?',
    'textarea',
    'Do not paste passwords into this form. List the systems we need access to and how we should receive credentials (for example a 1Password vault or a scheduled handoff).',
    false, 4),
 
   (57, 10,
-   'Does the company use any Project Management software?',
-   'textarea', null, false, 5),
+   'Does the company use any project management software, and if so which one?',
+   'textarea', 'For example Asana, Jira, Monday, or ClickUp.', false, 5),
 
   (58, 10,
    'Do you have confidence in the current technology your company uses, or are you worried about scaling/growing?',
@@ -376,28 +380,30 @@ overriding system value values
   (62, 12, 'As the business grows, which systems do you consider mission-critical today, and where do you see those systems starting to become a bottleneck?',
    'textarea', null, false, 1),
 
-  (63, 12, 'What core platforms currently run the business, such as your ERP, CRM, WMS, TMS, accounting system, customer portal, or internally developed software? Which of these systems are most critical to daily operations?',
-   'textarea', null, false, 2),
+  (63, 12, 'What core platforms currently run the business (ERP, CRM, WMS, TMS, accounting, customer portal, or software you built), and which are most critical to daily operations?',
+   'textarea',
+   E'ERP: enterprise resource planning, the system that runs core operations.\nCRM: customer relationships.\nWMS: warehouse management.\nTMS: transportation / logistics.',
+   false, 2),
 
-  (64, 12, 'What custom software, internal applications, databases, APIs, or other technology has the company built or owns today? Who maintains them, and how actively are they being developed?',
+  (64, 12, 'What custom software, internal apps, databases, APIs, or other technology does the company own? Who maintains them, and how actively are they developed?',
    'textarea', null, false, 3),
 
-  (65, 12, 'Are there parts of your current technology that have become difficult or expensive to modify because of technical debt, legacy code, heavy customization, or decisions made when the business was smaller? Please provide specific examples.',
+  (65, 12, 'Are parts of your technology hard or expensive to change because of technical debt, legacy code, heavy customization, or old decisions? Please give specific examples.',
    'textarea', null, false, 4),
 
-  (66, 12, 'How is your technology currently structured across development, testing, and production environments? How are software changes tested, approved, deployed, and rolled back if something goes wrong?',
+  (66, 12, 'How are development, testing, and production set up? How are software changes tested, approved, deployed, and rolled back?',
    'textarea', null, false, 5),
 
-  (67, 12, 'What are the current transaction volumes, user volumes, data volumes, or peak loads on your most important systems? Do you know what capacity or performance limits those systems have as the business grows?',
+  (67, 12, 'What volume or load do your most important systems handle today (transactions, users, data, or peak traffic), and do you know their capacity limits as you grow?',
    'textarea', null, false, 6),
 
-  (68, 12, 'For your major software platforms, what integration capabilities are available, such as APIs, webhooks, direct database access, or file-based interfaces? Are there vendor, licensing, rate-limit, or technical restrictions on using them?',
+  (68, 12, 'How can your major platforms integrate with other systems (APIs, webhooks, database access, or files), and are there vendor, license, or rate-limit restrictions?',
    'textarea', null, false, 7),
 
-  (69, 12, 'Are there areas where your technology has been heavily customized for individual customers, locations, departments, or workflows? How difficult is it to maintain those variations as the company grows?',
+  (69, 12, 'Has technology been heavily customized for specific customers, locations, departments, or workflows? How hard is that to maintain as you grow?',
    'textarea', null, false, 8),
 
-  (70, 12, 'How do you currently decide whether to build technology internally, customize an existing platform, or purchase a new system? Who is responsible for evaluating the long-term technical and business implications of those decisions?',
+  (70, 12, 'How do you decide whether to build, customize, or buy technology, and who owns the long-term implications of those decisions?',
    'textarea', null, false, 9),
 
   (71, 12, 'What major technology investments or architectural decisions do you expect the company will need to make over the next 12 to 24 months in order to support its growth plans?',
@@ -426,9 +432,11 @@ overriding system value values
    'textarea', null, false, 7),
 
   (79, 13, 'Does the company operate cash-based or accrual-based?',
-   'radio', null, false, 8),
+   'radio',
+   E'Cash: you record revenue when money arrives.\nAccrual: you record it when it is earned, even if unpaid.\nChoose Not sure if you do not know.',
+   false, 8),
 
-  (80, 13, 'If you could wave a magic wand, what are 2-3 technology-related outcomes you want to see achieved in the next 90 days? Be specific and make it photographable.',
+  (80, 13, 'If you could wave a magic wand, what 2–3 technology outcomes would you want in the next 90 days? Be specific and make it photographable.',
    'textarea',
    'Example: Launch XYZ project, or implement ABC system companywide.',
    false, 9);

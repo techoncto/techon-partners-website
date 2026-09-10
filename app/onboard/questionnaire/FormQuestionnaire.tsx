@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import type { CategoryWithQuestions, Question, Answer, Part } from '@/lib/types'
 import { LAST_SECTION_KEY, REVIEW_SLUG, categorySlugs, sectionHref } from '@/lib/onboard-section'
 import { findMissingRequired, missingRequiredMessage } from '@/lib/onboard-required'
+import { helpUsesPopover, QuestionHelp } from './QuestionHelp'
 
 interface FormData {
   [questionId: string]: string | string[]
@@ -713,11 +714,14 @@ export default function FormQuestionnaire() {
                         <span className="text-slate-400 mr-2">{idx + 1}.</span>
                         {question.label}
                         {question.required && <span className="text-red-500 ml-1">*</span>}
+                        {question.help_text && helpUsesPopover(question.help_text) && (
+                          <QuestionHelp text={question.help_text} />
+                        )}
                       </label>
                       {incompleteIds.includes(question.id) && (
                         <p className="text-xs text-red-600 mb-2">This question needs a response before you can submit.</p>
                       )}
-                      {question.help_text && (
+                      {question.help_text && !helpUsesPopover(question.help_text) && (
                         <p className="text-xs text-slate-400 mb-2 italic">{question.help_text}</p>
                       )}
                       <FieldRenderer
