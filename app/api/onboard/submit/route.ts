@@ -21,17 +21,31 @@ type QuestionRow = {
   label: string
   display_order: number
   category_id: number
+  deleted_at?: string | null
   categories: {
     id: number
     name: string
     display_order: number
-    parts: { id: number; name: string; display_order: number } | { id: number; name: string; display_order: number }[] | null
+    deleted_at?: string | null
+    parts: { id: number; name: string; display_order: number; deleted_at?: string | null } | { id: number; name: string; display_order: number; deleted_at?: string | null }[] | null
   } | {
     id: number
     name: string
     display_order: number
-    parts: { id: number; name: string; display_order: number } | { id: number; name: string; display_order: number }[] | null
+    deleted_at?: string | null
+    parts: { id: number; name: string; display_order: number; deleted_at?: string | null } | { id: number; name: string; display_order: number; deleted_at?: string | null }[] | null
   }[] | null
+}
+
+function isLiveQuestion(row: { deleted_at?: string | null; categories?: QuestionRow['categories'] }) {
+  if (row.deleted_at) return false
+  const rawCategory = row.categories
+  const category = Array.isArray(rawCategory) ? rawCategory[0] : rawCategory
+  if (!category || category.deleted_at) return false
+  const rawPart = category.parts
+  const part = Array.isArray(rawPart) ? rawPart[0] : rawPart
+  if (part?.deleted_at) return false
+  return true
 }
 
 async function loadAnswerSections(clientId: string): Promise<SubmittedAnswerSection[]> {
@@ -43,8 +57,8 @@ async function loadAnswerSections(clientId: string): Promise<SubmittedAnswerSect
     supabaseAdmin
       .from('questions')
       .select(`
-        id, label, display_order, category_id,
-        categories ( id, name, display_order, parts ( id, name, display_order ) )
+        id, label, display_order, category_id, deleted_at,
+        categories ( id, name, display_order, deleted_at, parts ( id, name, display_order, deleted_at ) )
       `),
   ])
 
@@ -61,7 +75,7 @@ async function loadAnswerSections(clientId: string): Promise<SubmittedAnswerSect
   }>()
 
   for (const question of (questions ?? []) as QuestionRow[]) {
-    if (HIDDEN_QUESTION_IDS.has(question.id)) continue
+    if (HIDDEN_QUESTION_IDS.has(question.id) || !isLiveQuestion(question)) continue
     const rawCategory = question.categories
     const category = Array.isArray(rawCategory) ? rawCategory[0] : rawCategory
     if (!category) continue
@@ -131,9 +145,9 @@ export async function POST(req: NextRequest) {
       supabaseAdmin
         .from('questions')
         .select(`
-          id, label, required, answer_type, category_id, display_order,
-          categories ( id, name, display_order ),
-          question_options ( id, label, display_order, follow_up_prompt )
+          id, label, required, answer_type, category_id, display_order, deleted_at,
+          categories ( id, name, display_order, deleted_at ),
+          question_options ( id, label, display_order, follow_up_prompt, deleted_at )
         `),
     ])
 
@@ -147,15 +161,16 @@ export async function POST(req: NextRequest) {
     const grouped = new Map<number, CatGroup>()
     for (const row of questionRows ?? []) {
       if (HIDDEN_QUESTION_IDS.has(row.id)) continue
-      const rawCategory = row.categories as { id: number; name: string; display_order: number } | { id: number; name: string; display_order: number }[] | null
+      const rawCategory = row.categories as { id: number; name: string; display_order: number; deleted_at?: string | null } | { id: number; name: string; display_order: number; deleted_at?: string | null }[] | null
       const category = Array.isArray(rawCategory) ? rawCategory[0] : rawCategory
-      if (!category) continue
+      if (!category || row.deleted_at || category.deleted_at) continue
       let group = grouped.get(category.id)
       if (!group) {
         group = { name: category.name, display_order: category.display_order, questions: [] }
         grouped.set(category.id, group)
       }
-      const options = (row.question_options ?? []) as NonNullable<Question['options']>
+      const options = ((row.question_options ?? []) as (NonNullable<Question['options']>[number] & { deleted_at?: string | null })[])
+        .filter(option => option.deleted_at == null)
       group.questions.push({
         id: row.id,
         category_id: row.category_id,

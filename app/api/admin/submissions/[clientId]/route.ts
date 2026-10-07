@@ -10,9 +10,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ cli
         .from('answers')
         .select(`
           answer_value,
-          questions ( id, label, answer_type, display_order,
-            categories ( id, name, display_order,
-              parts ( id, name, display_order )
+          questions ( id, label, answer_type, display_order, deleted_at,
+            categories ( id, name, display_order, deleted_at,
+              parts ( id, name, display_order, deleted_at )
             )
           )
         `)

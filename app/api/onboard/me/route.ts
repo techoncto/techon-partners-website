@@ -37,7 +37,8 @@ export async function GET(req: NextRequest) {
         .is('deleted_at', null),
       supabaseAdmin
         .from('questions')
-        .select('id'),
+        .select('id')
+        .is('deleted_at', null),
     ])
 
     if (clientResult.error || !clientResult.data) {
