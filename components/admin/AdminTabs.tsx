@@ -32,10 +32,20 @@ export function useSetUnsavedChanges(dirty: boolean) {
 export function AdminTabs({ active }: { active: AdminTab }) {
   const unsaved = useContext(UnsavedChangesContext)
 
-  function confirmLeave(event: MouseEvent<HTMLAnchorElement>, tab: AdminTab) {
-    if (tab === active || !unsaved?.dirty) return
-    if (window.confirm('You have unsaved questionnaire changes. Leave without saving?')) return
-    event.preventDefault()
+  function onTabClick(event: MouseEvent<HTMLAnchorElement>, tab: (typeof tabs)[number]) {
+    if (tab.id === active) {
+      event.preventDefault()
+      return
+    }
+    if (unsaved?.dirty && !window.confirm('You have unsaved questionnaire changes. Leave without saving?')) {
+      event.preventDefault()
+      return
+    }
+    // Full load so the editor does not come back from the client navigation cache.
+    if (tab.id === 'questionnaire') {
+      event.preventDefault()
+      window.location.assign(tab.href)
+    }
   }
 
   return (
@@ -44,7 +54,7 @@ export function AdminTabs({ active }: { active: AdminTab }) {
         <Link
           key={tab.id}
           href={tab.href}
-          onClick={event => confirmLeave(event, tab.id)}
+          onClick={event => onTabClick(event, tab)}
           className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors ${
             active === tab.id
               ? 'bg-blue-600 text-white shadow-sm'
