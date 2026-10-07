@@ -131,11 +131,21 @@ function parseDateString(value: string): string | null {
   return null
 }
 
+/** exceljs turns date-only cells into UTC midnight, so the calendar day is the UTC day. */
+function utcCalendarParts(value: Date): { year: number; month: number; day: number } {
+  return {
+    year: value.getUTCFullYear(),
+    month: value.getUTCMonth() + 1,
+    day: value.getUTCDate(),
+  }
+}
+
 /** Excel serials below 32 are day-of-month numbers, not calendar dates. */
 function calendarDate(value: unknown): string | null {
   const raw = unwrap(value)
   if (raw instanceof Date && !Number.isNaN(raw.getTime())) {
-    return toIsoDate(raw.getFullYear(), raw.getMonth() + 1, raw.getDate())
+    const parts = utcCalendarParts(raw)
+    return toIsoDate(parts.year, parts.month, parts.day)
   }
   if (typeof raw === 'number' && Number.isFinite(raw) && raw >= 32) {
     const ms = Date.UTC(1899, 11, 30) + Math.round(raw) * 86400000
@@ -150,7 +160,7 @@ function calendarDate(value: unknown): string | null {
 function dayOfMonth(value: unknown): number | null {
   const raw = unwrap(value)
   if (typeof raw === 'number' && Number.isInteger(raw) && raw >= 1 && raw <= 31) return raw
-  if (raw instanceof Date && !Number.isNaN(raw.getTime())) return raw.getDate()
+  if (raw instanceof Date && !Number.isNaN(raw.getTime())) return utcCalendarParts(raw).day
 
   const text = textOf(raw)
   if (/^\d{1,2}$/.test(text)) {

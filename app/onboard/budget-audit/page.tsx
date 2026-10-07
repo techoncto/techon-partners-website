@@ -366,15 +366,12 @@ export default function BudgetAuditPage() {
 
       const existingIds = rows.flatMap(row => (row.id != null ? [row.id] : []))
       const nextDeleted = [...new Set([...deletedIds, ...existingIds])]
-      setRows(imported)
-      setDeletedIds(nextDeleted)
-      setImportWarnings(Array.isArray(data.warnings) ? data.warnings.map(String) : [])
       const saved = await persist(imported, nextDeleted)
-      if (saved) {
-        setImportMsg(
-          `Filled in ${imported.length} expense${imported.length === 1 ? '' : 's'} from the spreadsheet and saved them.`,
-        )
-      }
+      if (!saved) return
+      setImportWarnings(Array.isArray(data.warnings) ? data.warnings.map(String) : [])
+      setImportMsg(
+        `Filled in ${imported.length} expense${imported.length === 1 ? '' : 's'} from the spreadsheet and saved them.`,
+      )
     } catch {
       setError('Could not read that spreadsheet. Please try again.')
     } finally {
