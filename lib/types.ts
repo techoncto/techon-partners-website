@@ -1,5 +1,9 @@
 export type AnswerType = 'textarea' | 'text' | 'number' | 'dropdown' | 'radio' | 'checkbox'
 
+export const ANSWER_TYPES: AnswerType[] = ['textarea', 'text', 'number', 'dropdown', 'radio', 'checkbox']
+
+export const CHOICE_ANSWER_TYPES = new Set<AnswerType>(['dropdown', 'radio', 'checkbox'])
+
 export interface InviteToken {
   id: number
   code: string

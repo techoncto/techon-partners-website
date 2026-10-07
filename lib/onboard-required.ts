@@ -1,4 +1,4 @@
-import type { Question } from '@/lib/types'
+import { CHOICE_ANSWER_TYPES, type Question } from '@/lib/types'
 
 export const HIDDEN_QUESTION_IDS = new Set([51, 52])
 
@@ -68,6 +68,7 @@ export function questionGap(
   if (question.required && !hasAnswer) return 'answer'
 
   if (!hasAnswer) return null
+  if (!CHOICE_ANSWER_TYPES.has(question.answer_type)) return null
 
   const prompted = (question.options ?? []).filter(opt => opt.follow_up_prompt)
   for (const opt of prompted) {

@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import Link from 'next/link'
-import BrandLogo from '@/components/layout/BrandLogo'
+import { Suspense, useState, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { AdminHeader } from '@/components/admin/AdminHeader'
+import { AdminTabs } from '@/components/admin/AdminTabs'
+import { LoginScreen } from '@/components/admin/LoginScreen'
 import { formatAnswerValue } from '@/lib/onboard-emails'
 
 // ── Types ──────────────────────────────────────────────────────
@@ -49,6 +51,7 @@ interface AnswerRow {
     label: string
     answer_type: string
     display_order: number
+    deleted_at?: string | null
     categories: {
       id: number
       name: string
@@ -116,83 +119,6 @@ function EmailStatusBadge({ status }: { status: string }) {
     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${cfg.color}`}>
       {cfg.label}
     </span>
-  )
-}
-
-// ── Login screen ──────────────────────────────────────────────
-
-function LoginScreen({ onLogin }: { onLogin: () => void }) {
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
-    try {
-      const res = await fetch('/api/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
-      })
-      const data = await res.json()
-      if (!res.ok) { setError(data.error ?? 'Invalid password.'); return }
-      onLogin()
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <div className="min-h-screen bg-slate-100 flex flex-col">
-      {/* Same top nav as the dashboard */}
-      <header className="bg-navy-900 h-16 px-6 flex items-center gap-3">
-        <Link href="/" className="flex items-center gap-2 cursor-pointer" aria-label="Techon Partners – Home">
-          <BrandLogo onDark />
-        </Link>
-        <span className="text-slate-400 text-sm">/ Admin Portal</span>
-      </header>
-
-      {/* Centered login card */}
-      <div className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-sm">
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            {/* Card header strip */}
-            <div className="bg-navy-900 px-8 py-6">
-              <h1 className="text-white font-semibold text-lg">Welcome back</h1>
-              <p className="text-slate-400 text-sm mt-0.5">Sign in to the admin portal</p>
-            </div>
-
-            <div className="px-8 py-7">
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div>
-                  <label className="block text-sm font-medium text-navy-800 mb-1.5">Password</label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    required
-                    placeholder="Enter your password"
-                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-navy-900 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                {error && (
-                  <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-4 py-3">{error}</p>
-                )}
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold py-3 rounded-lg text-sm transition-colors"
-                >
-                  {loading ? 'Signing in…' : 'Sign In'}
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   )
 }
 
@@ -710,7 +636,10 @@ function AnswerDrawer({
                     .sort((a, b) => (a.questions?.display_order ?? 0) - (b.questions?.display_order ?? 0))
                     .map((a, i) => (
                       <div key={i} className="border-b border-slate-100 pb-4 last:border-0 last:pb-0">
-                        <p className="text-xs text-slate-500 mb-1">{a.questions?.label}</p>
+                        <p className="text-xs text-slate-500 mb-1">
+                          {a.questions?.label}
+                          {a.questions?.deleted_at ? ' · removed from the form' : ''}
+                        </p>
                         <p className="text-sm text-navy-800 whitespace-pre-wrap">{formatAnswerValue(a.answer_value)}</p>
                       </div>
                     ))}
@@ -1004,56 +933,19 @@ function SubmissionsTable({ refreshKey }: { refreshKey: number }) {
 
 // ── Main dashboard ─────────────────────────────────────────────
 
-type Tab = 'invitations' | 'submissions'
-
 function Dashboard() {
-  const [tab, setTab] = useState<Tab>('invitations')
+  const tab = useSearchParams().get('tab') === 'submissions' ? 'submissions' : 'invitations'
   const [refreshKey, setRefreshKey] = useState(0)
-
-  async function handleLogout() {
-    await fetch('/api/admin/logout', { method: 'POST' })
-    window.location.reload()
-  }
 
   function bump() { setRefreshKey(k => k + 1) }
 
   return (
     <div className="min-h-screen bg-slate-100">
-      {/* Top nav */}
-      <header className="bg-navy-900 h-16 px-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="flex items-center gap-2 cursor-pointer" aria-label="Techon Partners – Home">
-            <BrandLogo onDark />
-          </Link>
-          <span className="text-slate-400 text-sm">/ Admin Portal</span>
-        </div>
-        <button onClick={handleLogout} className="text-sm text-slate-400 hover:text-white transition-colors">
-          Log out
-        </button>
-      </header>
+      <AdminHeader />
 
       <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
+        <AdminTabs active={tab} />
         <InvitePanel onInviteSent={bump} />
-
-        {/* Tabs */}
-        <div className="flex gap-1 bg-white border border-slate-200 rounded-xl p-1 w-fit">
-          {([
-            { id: 'invitations', label: 'Invitations' },
-            { id: 'submissions', label: 'Submissions' },
-          ] as { id: Tab; label: string }[]).map(t => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors ${
-                tab === t.id
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
 
         {tab === 'invitations' && <InvitationsTable refreshKey={refreshKey} />}
         {tab === 'submissions' && <SubmissionsTable refreshKey={refreshKey} />}
@@ -1083,5 +975,9 @@ export default function AdminPage() {
 
   if (!authed) return <LoginScreen onLogin={() => setAuthed(true)} />
 
-  return <Dashboard />
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-100" />}>
+      <Dashboard />
+    </Suspense>
+  )
 }
