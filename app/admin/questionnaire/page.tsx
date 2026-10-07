@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { AdminHeader } from '@/components/admin/AdminHeader'
-import { AdminTabs } from '@/components/admin/AdminTabs'
+import { AdminTabs, UnsavedChangesProvider } from '@/components/admin/AdminTabs'
 import { LoginScreen } from '@/components/admin/LoginScreen'
 import { QuestionnaireEditor } from './QuestionnaireEditor'
 
@@ -28,10 +28,12 @@ export default function QuestionnaireAdminPage() {
   return (
     <div className="min-h-screen bg-slate-100">
       <AdminHeader />
-      <div className="max-w-6xl mx-auto px-6 pt-8">
-        <AdminTabs active="questionnaire" />
-      </div>
-      <QuestionnaireEditor />
+      <UnsavedChangesProvider>
+        <div className="max-w-6xl mx-auto px-6 pt-8">
+          <AdminTabs active="questionnaire" />
+        </div>
+        <QuestionnaireEditor />
+      </UnsavedChangesProvider>
     </div>
   )
 }

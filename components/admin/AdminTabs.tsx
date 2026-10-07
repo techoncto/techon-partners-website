@@ -1,5 +1,6 @@
 'use client'
 
+import { createContext, useContext, useEffect, useMemo, useState, type MouseEvent, type ReactNode } from 'react'
 import Link from 'next/link'
 
 const tabs = [
@@ -10,13 +11,40 @@ const tabs = [
 
 export type AdminTab = (typeof tabs)[number]['id']
 
+const UnsavedChangesContext = createContext<{
+  dirty: boolean
+  setDirty: (dirty: boolean) => void
+} | null>(null)
+
+export function UnsavedChangesProvider({ children }: { children: ReactNode }) {
+  const [dirty, setDirty] = useState(false)
+  const value = useMemo(() => ({ dirty, setDirty }), [dirty])
+  return <UnsavedChangesContext.Provider value={value}>{children}</UnsavedChangesContext.Provider>
+}
+
+export function useSetUnsavedChanges(dirty: boolean) {
+  const setDirty = useContext(UnsavedChangesContext)?.setDirty
+  useEffect(() => {
+    setDirty?.(dirty)
+  }, [setDirty, dirty])
+}
+
 export function AdminTabs({ active }: { active: AdminTab }) {
+  const unsaved = useContext(UnsavedChangesContext)
+
+  function confirmLeave(event: MouseEvent<HTMLAnchorElement>, tab: AdminTab) {
+    if (tab === active || !unsaved?.dirty) return
+    if (window.confirm('You have unsaved questionnaire changes. Leave without saving?')) return
+    event.preventDefault()
+  }
+
   return (
     <div className="flex gap-1 bg-white border border-slate-200 rounded-xl p-1 w-fit">
       {tabs.map(tab => (
         <Link
           key={tab.id}
           href={tab.href}
+          onClick={event => confirmLeave(event, tab.id)}
           className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors ${
             active === tab.id
               ? 'bg-blue-600 text-white shadow-sm'

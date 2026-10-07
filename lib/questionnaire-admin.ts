@@ -179,6 +179,90 @@ async function softDelete(table: 'parts' | 'categories' | 'questions' | 'questio
   if (error) throw new Error(error.message)
 }
 
+type PlannedOption = { id: number | null; label: string; follow_up_prompt: string | null }
+type PlannedQuestion = {
+  id: number | null
+  label: string
+  answer_type: AnswerType
+  help_text: string | null
+  required: boolean
+  options: PlannedOption[]
+}
+type PlannedCategory = { id: number | null; name: string; questions: PlannedQuestion[] }
+type PlannedPart = { id: number | null; name: string; categories: PlannedCategory[] }
+
+function planQuestionnaire(
+  partsInput: SavePart[],
+  activeParts: Set<number>,
+  activeCategories: Set<number>,
+  activeQuestions: Set<number>,
+  activeOptions: Set<number>,
+) {
+  const seenParts = new Set<number>()
+  const seenCategories = new Set<number>()
+  const seenQuestions = new Set<number>()
+  const seenOptions = new Set<number>()
+  const parts: PlannedPart[] = []
+
+  for (const partInput of partsInput) {
+    const partName = cleanText(partInput?.name)
+    if (!partName) throw bad('Every part needs a name.')
+    const categoriesInput = Array.isArray(partInput?.categories) ? partInput.categories : []
+    const categories: PlannedCategory[] = []
+
+    for (const categoryInput of categoriesInput) {
+      const categoryName = cleanText(categoryInput?.name)
+      if (!categoryName) throw bad(`A section in ${partName} needs a name.`)
+      const questionsInput = Array.isArray(categoryInput?.questions) ? categoryInput.questions : []
+      const questions: PlannedQuestion[] = []
+
+      for (const questionInput of questionsInput) {
+        const label = cleanText(questionInput?.label)
+        if (!label) throw bad(`A question in ${categoryName} is empty.`)
+        if (!isAnswerType(questionInput?.answer_type)) throw bad(`Invalid answer type for “${label}”.`)
+        const choice = CHOICE_ANSWER_TYPES.has(questionInput.answer_type)
+        const options = choice
+          ? (Array.isArray(questionInput.options) ? questionInput.options : [])
+            .map(option => ({
+              id: option?.id,
+              label: cleanText(option?.label),
+              follow_up_prompt: cleanText(option?.follow_up_prompt),
+            }))
+            .filter((option): option is { id: number | null | undefined; label: string; follow_up_prompt: string | null } => option.label != null)
+            .map(option => ({
+              id: takeId(option.id, 'option', activeOptions, seenOptions),
+              label: option.label,
+              follow_up_prompt: option.follow_up_prompt,
+            }))
+          : []
+        if (choice && options.length === 0) throw bad(`Add at least one option for “${label}”.`)
+        questions.push({
+          id: takeId(questionInput?.id, 'question', activeQuestions, seenQuestions),
+          label,
+          answer_type: questionInput.answer_type,
+          help_text: cleanText(questionInput?.help_text),
+          required: questionInput?.required === true,
+          options,
+        })
+      }
+
+      categories.push({
+        id: takeId(categoryInput?.id, 'section', activeCategories, seenCategories),
+        name: categoryName,
+        questions,
+      })
+    }
+
+    parts.push({
+      id: takeId(partInput?.id, 'part', activeParts, seenParts),
+      name: partName,
+      categories,
+    })
+  }
+
+  return { parts, seenParts, seenCategories, seenQuestions, seenOptions }
+}
+
 export async function saveQuestionnaire(partsInput: SavePart[]): Promise<QuestionnairePart[]> {
   if (!Array.isArray(partsInput) || partsInput.length === 0) {
     throw bad('Keep at least one part.')
@@ -191,74 +275,65 @@ export async function saveQuestionnaire(partsInput: SavePart[]): Promise<Questio
     activeIds('question_options'),
   ])
 
-  const seenParts = new Set<number>()
-  const seenCategories = new Set<number>()
-  const seenQuestions = new Set<number>()
-  const seenOptions = new Set<number>()
+  const { parts, seenParts, seenCategories, seenQuestions, seenOptions } = planQuestionnaire(
+    partsInput,
+    activeParts,
+    activeCategories,
+    activeQuestions,
+    activeOptions,
+  )
 
-  for (let partIndex = 0; partIndex < partsInput.length; partIndex++) {
-    const part = partsInput[partIndex] ?? {}
-    const partName = cleanText(part.name)
-    if (!partName) throw bad('Every part needs a name.')
-    let partId = takeId(part.id, 'part', activeParts, seenParts)
-
+  for (let partIndex = 0; partIndex < parts.length; partIndex++) {
+    const part = parts[partIndex]
+    let partId = part.id
     if (partId) {
       const { error } = await supabaseAdmin
         .from('parts')
-        .update({ name: partName, display_order: partIndex + 1 })
+        .update({ name: part.name, display_order: partIndex + 1 })
         .eq('id', partId)
         .is('deleted_at', null)
       if (error) throw new Error(error.message)
     } else {
       const { data, error } = await supabaseAdmin
         .from('parts')
-        .insert({ name: partName, display_order: partIndex + 1 })
+        .insert({ name: part.name, display_order: partIndex + 1 })
         .select('id')
         .single()
       if (error || !data) throw new Error(error?.message ?? 'Failed to add part.')
       partId = data.id
     }
-    const categories = Array.isArray(part.categories) ? part.categories : []
-    for (let categoryIndex = 0; categoryIndex < categories.length; categoryIndex++) {
-      const category = categories[categoryIndex] ?? {}
-      const categoryName = cleanText(category.name)
-      if (!categoryName) throw bad(`A section in ${partName} needs a name.`)
-      let categoryId = takeId(category.id, 'section', activeCategories, seenCategories)
 
+    for (let categoryIndex = 0; categoryIndex < part.categories.length; categoryIndex++) {
+      const category = part.categories[categoryIndex]
+      let categoryId = category.id
       if (categoryId) {
         const { error } = await supabaseAdmin
           .from('categories')
-          .update({ name: categoryName, part_id: partId, display_order: categoryIndex + 1 })
+          .update({ name: category.name, part_id: partId, display_order: categoryIndex + 1 })
           .eq('id', categoryId)
           .is('deleted_at', null)
         if (error) throw new Error(error.message)
       } else {
         const { data, error } = await supabaseAdmin
           .from('categories')
-          .insert({ name: categoryName, part_id: partId, display_order: categoryIndex + 1 })
+          .insert({ name: category.name, part_id: partId, display_order: categoryIndex + 1 })
           .select('id')
           .single()
         if (error || !data) throw new Error(error?.message ?? 'Failed to add section.')
         categoryId = data.id
       }
-      const questions = Array.isArray(category.questions) ? category.questions : []
-      for (let questionIndex = 0; questionIndex < questions.length; questionIndex++) {
-        const question = questions[questionIndex] ?? {}
-        const label = cleanText(question.label)
-        if (!label) throw bad(`A question in ${categoryName} is empty.`)
-        if (!isAnswerType(question.answer_type)) throw bad(`Invalid answer type for “${label}”.`)
-        const required = question.required === true
-        const helpText = cleanText(question.help_text)
-        let questionId = takeId(question.id, 'question', activeQuestions, seenQuestions)
+
+      for (let questionIndex = 0; questionIndex < category.questions.length; questionIndex++) {
+        const question = category.questions[questionIndex]
         const fields = {
           category_id: categoryId,
-          label,
+          label: question.label,
           answer_type: question.answer_type,
-          help_text: helpText,
-          required,
+          help_text: question.help_text,
+          required: question.required,
           display_order: questionIndex + 1,
         }
-
+        let questionId = question.id
         if (questionId) {
           const { error } = await supabaseAdmin.from('questions').update(fields).eq('id', questionId).is('deleted_at', null)
           if (error) throw new Error(error.message)
@@ -267,38 +342,25 @@ export async function saveQuestionnaire(partsInput: SavePart[]): Promise<Questio
           if (error || !data) throw new Error(error?.message ?? 'Failed to add question.')
           questionId = data.id
         }
-        const options = (Array.isArray(question.options) ? question.options : [])
-          .map(option => ({
-            id: option.id,
-            label: cleanText(option.label),
-            follow_up_prompt: cleanText(option.follow_up_prompt),
-          }))
-          .filter(option => option.label)
 
-        if (CHOICE_ANSWER_TYPES.has(question.answer_type) && options.length === 0) {
-          throw bad(`Add at least one option for “${label}”.`)
-        }
-
-        for (let optionIndex = 0; optionIndex < options.length; optionIndex++) {
-          const option = options[optionIndex]
-          let optionId = takeId(option.id, 'option', activeOptions, seenOptions)
+        for (let optionIndex = 0; optionIndex < question.options.length; optionIndex++) {
+          const option = question.options[optionIndex]
           const optionFields = {
             question_id: questionId,
-            label: option.label as string,
+            label: option.label,
             follow_up_prompt: option.follow_up_prompt,
             display_order: optionIndex + 1,
           }
-          if (optionId) {
+          if (option.id) {
             const { error } = await supabaseAdmin
               .from('question_options')
               .update(optionFields)
-              .eq('id', optionId)
+              .eq('id', option.id)
               .is('deleted_at', null)
             if (error) throw new Error(error.message)
           } else {
-            const { data, error } = await supabaseAdmin.from('question_options').insert(optionFields).select('id').single()
-            if (error || !data) throw new Error(error?.message ?? 'Failed to add option.')
-            optionId = data.id
+            const { error } = await supabaseAdmin.from('question_options').insert(optionFields)
+            if (error) throw new Error(error.message)
           }
         }
       }

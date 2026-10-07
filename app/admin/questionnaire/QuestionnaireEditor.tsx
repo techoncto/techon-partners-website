@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useSetUnsavedChanges } from '@/components/admin/AdminTabs'
 import { HIDDEN_QUESTION_IDS } from '@/lib/onboard-required'
 import { ANSWER_TYPES, CHOICE_ANSWER_TYPES, type AnswerType } from '@/lib/types'
 
@@ -140,11 +141,13 @@ function toPayload(parts: PartDraft[]) {
         answer_type: question.answerType,
         help_text: question.helpText,
         required: question.required,
-        options: question.options.map(option => ({
-          id: option.id,
-          label: option.label,
-          follow_up_prompt: option.followUp,
-        })),
+        options: CHOICE_ANSWER_TYPES.has(question.answerType)
+          ? question.options.map(option => ({
+            id: option.id,
+            label: option.label,
+            follow_up_prompt: option.followUp,
+          }))
+          : [],
       })),
     })),
   }))
@@ -172,6 +175,7 @@ export function QuestionnaireEditor() {
   const [categoryName, setCategoryName] = useState('')
   const [renaming, setRenaming] = useState<{ kind: 'part' | 'section'; key: string; name: string } | null>(null)
   const dirty = !loading && snapshot(parts) !== baseline
+  useSetUnsavedChanges(dirty)
 
   function nextKey(prefix: string) {
     keys.current += 1
