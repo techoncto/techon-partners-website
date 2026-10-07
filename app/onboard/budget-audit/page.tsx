@@ -160,6 +160,24 @@ function BillingDateField({
   )
 }
 
+function rowHasContent(row: RowData): boolean {
+  return [row.expense, row.cost, row.purpose, row.action, row.billing_frequency, row.billing_date, row.notes]
+    .some(value => value.trim() !== '')
+}
+
+function rowsFromImport(items: Record<string, unknown>[]): RowData[] {
+  return items.map(item => ({
+    _key: String(Date.now() + Math.random()),
+    expense: String(item.expense ?? ''),
+    cost: item.cost != null && item.cost !== '' ? String(item.cost) : '',
+    purpose: String(item.purpose ?? ''),
+    action: String(item.action ?? ''),
+    billing_frequency: String(item.billing_frequency ?? ''),
+    billing_date: String(item.billing_date ?? ''),
+    notes: String(item.notes ?? ''),
+  }))
+}
+
 export default function BudgetAuditPage() {
   const [rows, setRows] = useState<RowData[]>([newRow()])
   const [deletedIds, setDeletedIds] = useState<number[]>([])
@@ -167,7 +185,12 @@ export default function BudgetAuditPage() {
   const [saving, setSaving] = useState(false)
   const [savedMsg, setSavedMsg] = useState(false)
   const [error, setError] = useState('')
+  const [importing, setImporting] = useState(false)
+  const [exporting, setExporting] = useState(false)
+  const [importMsg, setImportMsg] = useState('')
+  const [importWarnings, setImportWarnings] = useState<string[]>([])
   const lastRowRef = useRef<HTMLTableRowElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const scrollToNewRow = useRef(false)
 
   useEffect(() => {
@@ -224,12 +247,12 @@ export default function BudgetAuditPage() {
     return isNaN(n) ? sum : sum + n
   }, 0)
 
-  const handleSave = useCallback(async () => {
+  const persist = useCallback(async (nextRows: RowData[], nextDeleted: number[]) => {
     setError('')
     setSavedMsg(false)
     setSaving(true)
     try {
-      const items = rows.map((r, idx) => ({
+      const items = nextRows.map((r, idx) => ({
         id: r.id,
         expense: r.expense,
         cost: r.cost !== '' ? parseFloat(r.cost) : null,
@@ -246,12 +269,12 @@ export default function BudgetAuditPage() {
       const res = await fetch('/api/onboard/budget-audit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items, deletedIds }),
+        body: JSON.stringify({ items, deletedIds: nextDeleted }),
       })
       const data = await res.json()
       if (!res.ok) {
         setError(data.error ?? 'Failed to save. Please try again.')
-        return
+        return false
       }
       if (data.items?.length > 0) {
         setRows(mapItems(data.items))
@@ -259,10 +282,102 @@ export default function BudgetAuditPage() {
       setDeletedIds([])
       setSavedMsg(true)
       setTimeout(() => setSavedMsg(false), 3000)
+      return true
     } finally {
       setSaving(false)
     }
-  }, [rows, deletedIds])
+  }, [])
+
+  const handleSave = useCallback(() => {
+    void persist(rows, deletedIds)
+  }, [persist, rows, deletedIds])
+
+  async function handleExport() {
+    const items = rows.filter(rowHasContent).map(row => ({
+      expense: row.expense,
+      cost: row.cost,
+      purpose: row.purpose,
+      action: row.action,
+      billing_frequency: row.billing_frequency,
+      billing_date: row.billing_date,
+      notes: row.notes,
+    }))
+    if (items.length === 0) {
+      setError('Add at least one expense before exporting.')
+      setImportMsg('')
+      return
+    }
+
+    setError('')
+    setExporting(true)
+    try {
+      const res = await fetch('/api/onboard/budget-audit/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setError(data.error ?? 'Could not export the spreadsheet.')
+        return
+      }
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = 'budget-audit.xlsx'
+      link.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      setError('Could not export the spreadsheet. Please try again.')
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  async function handleUpload(file: File) {
+    setError('')
+    setImportMsg('')
+    setImportWarnings([])
+    setImporting(true)
+    try {
+      const body = new FormData()
+      body.append('file', file)
+      const res = await fetch('/api/onboard/budget-audit/import', { method: 'POST', body })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error ?? 'Could not read that spreadsheet.')
+        return
+      }
+
+      const imported = rowsFromImport(data.items ?? [])
+      if (imported.length === 0) {
+        setError('No expenses were found in that spreadsheet.')
+        return
+      }
+
+      const filled = rows.filter(rowHasContent).length
+      if (filled > 0) {
+        const replace = window.confirm(
+          `Replace the ${filled} expense${filled === 1 ? '' : 's'} on this page with ${imported.length} from the spreadsheet? This saves the new list.`,
+        )
+        if (!replace) return
+      }
+
+      const existingIds = rows.flatMap(row => (row.id != null ? [row.id] : []))
+      const nextDeleted = [...new Set([...deletedIds, ...existingIds])]
+      const saved = await persist(imported, nextDeleted)
+      if (!saved) return
+      setImportWarnings(Array.isArray(data.warnings) ? data.warnings.map(String) : [])
+      setImportMsg(
+        `Filled in ${imported.length} expense${imported.length === 1 ? '' : 's'} from the spreadsheet and saved them.`,
+      )
+    } catch {
+      setError('Could not read that spreadsheet. Please try again.')
+    } finally {
+      setImporting(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -284,7 +399,48 @@ export default function BudgetAuditPage() {
           everything. As you add each item, grade it: <span className="font-medium text-green-700">Keep It</span>,{' '}
           <span className="font-medium text-amber-700">Review It</span>, or{' '}
           <span className="font-medium text-red-700">Trash It</span>.
+          You can type them here, or download a blank template and upload it to fill this table.
         </p>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <a
+            href="/api/onboard/budget-audit/template"
+            className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-navy-900 hover:bg-slate-50 transition-colors"
+          >
+            Download template
+          </a>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={importing || saving || exporting}
+            className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-navy-900 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+          >
+            {importing ? 'Reading spreadsheet…' : 'Upload spreadsheet'}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            className="hidden"
+            onChange={event => {
+              const file = event.target.files?.[0]
+              event.target.value = ''
+              if (file) void handleUpload(file)
+            }}
+          />
+        </div>
+        {importMsg && (
+          <p className="mt-3 text-sm text-green-700">{importMsg}</p>
+        )}
+        {importWarnings.length > 0 && (
+          <ul className="mt-3 space-y-1 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            {importWarnings.slice(0, 20).map((warning, index) => (
+              <li key={`${index}-${warning}`}>{warning}</li>
+            ))}
+            {importWarnings.length > 20 && (
+              <li>And {importWarnings.length - 20} more.</li>
+            )}
+          </ul>
+        )}
       </div>
 
       <div className="grid grid-cols-3 gap-4">
@@ -448,7 +604,7 @@ export default function BudgetAuditPage() {
           </table>
         </div>
 
-        <div className="px-4 py-3 border-t border-slate-200 bg-white flex items-center justify-between gap-4">
+        <div className="px-4 py-3 border-t border-slate-200 bg-white flex flex-wrap items-center justify-between gap-4">
           <button
             onClick={addRow}
             className="flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
@@ -469,8 +625,16 @@ export default function BudgetAuditPage() {
               <span className="text-sm text-green-600 font-medium">Saved!</span>
             )}
             <button
+              type="button"
+              onClick={() => void handleExport()}
+              disabled={exporting || importing || saving}
+              className="px-4 py-2.5 border border-slate-200 rounded-lg text-sm font-medium text-navy-900 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+            >
+              {exporting ? 'Exporting…' : 'Export Excel'}
+            </button>
+            <button
               onClick={handleSave}
-              disabled={saving}
+              disabled={saving || importing || exporting}
               className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors"
             >
               {saving ? 'Saving…' : 'Save'}

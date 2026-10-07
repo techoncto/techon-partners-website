@@ -18,7 +18,7 @@ export default function Header() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200/60">
-      <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
+      <div className="max-w-6xl mx-auto px-4 lg:px-6 h-16 flex items-center justify-between gap-3 lg:gap-4">
         {/* Logo */}
         <Link
           href="/"
@@ -36,7 +36,7 @@ export default function Header() {
               <Link
                 key={href}
                 href={href}
-                className={`px-3 lg:px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-2 lg:px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                   isActive
                     ? "bg-blue-50 text-blue-600"
                     : "text-slate-600 hover:text-navy-800 hover:bg-slate-50"
@@ -50,17 +50,17 @@ export default function Header() {
         </nav>
 
         {/* Desktop CTA */}
-        <div className="hidden md:flex items-center gap-3 shrink-0">
+        <div className="hidden md:flex items-center gap-2 lg:gap-3 shrink-0">
           <Link
             href="/contact"
-            className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm"
+            className="px-3 lg:px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium whitespace-nowrap hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm"
           >
             Book a Call
           </Link>
-          <span className="hidden lg:block w-px h-4 bg-slate-200" aria-hidden />
+          <span className="w-px h-4 bg-slate-200" aria-hidden />
           <Link
             href="/onboard/login"
-            className="hidden lg:inline text-sm font-medium text-slate-400 hover:text-slate-600 transition-colors"
+            className="text-sm font-medium text-slate-400 hover:text-slate-600 whitespace-nowrap transition-colors"
           >
             Client Login
           </Link>

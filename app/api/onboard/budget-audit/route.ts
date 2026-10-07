@@ -51,20 +51,6 @@ export async function POST(req: NextRequest) {
     const items = body.items ?? []
     const deletedIds = (body.deletedIds ?? []).map(toIntId).filter((id): id is number => id !== null)
 
-    if (deletedIds.length > 0) {
-      const { error: softDeleteError } = await supabaseAdmin
-        .from('budget_audit_items')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('client_id', session.clientId)
-        .in('id', deletedIds)
-        .is('deleted_at', null)
-
-      if (softDeleteError) {
-        console.error('Budget audit soft-delete error:', softDeleteError)
-        return NextResponse.json({ error: 'Failed to save.' }, { status: 500 })
-      }
-    }
-
     const toUpdate = items.filter(item => toIntId(item.id) !== null)
     const toInsert = items.filter(item => toIntId(item.id) === null)
 
@@ -92,6 +78,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Insert before soft-delete. A failed insert must leave existing expenses in place.
+    let insertedIds: number[] = []
     if (toInsert.length > 0) {
       const rows = toInsert.map((item, idx) => ({
         client_id: session.clientId,
@@ -105,12 +93,37 @@ export async function POST(req: NextRequest) {
         display_order: item.display_order ?? toUpdate.length + idx,
       }))
 
-      const { error: insertError } = await supabaseAdmin
+      const { data: inserted, error: insertError } = await supabaseAdmin
         .from('budget_audit_items')
         .insert(rows)
+        .select('id')
 
       if (insertError) {
         console.error('Budget audit insert error:', insertError)
+        return NextResponse.json({ error: 'Failed to save.' }, { status: 500 })
+      }
+      insertedIds = (inserted ?? []).map(row => toIntId(row.id)).filter((id): id is number => id !== null)
+    }
+
+    if (deletedIds.length > 0) {
+      const { error: softDeleteError } = await supabaseAdmin
+        .from('budget_audit_items')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('client_id', session.clientId)
+        .in('id', deletedIds)
+        .is('deleted_at', null)
+
+      if (softDeleteError) {
+        console.error('Budget audit soft-delete error:', softDeleteError)
+        if (insertedIds.length > 0) {
+          const { error: rollbackError } = await supabaseAdmin
+            .from('budget_audit_items')
+            .update({ deleted_at: new Date().toISOString() })
+            .eq('client_id', session.clientId)
+            .in('id', insertedIds)
+            .is('deleted_at', null)
+          if (rollbackError) console.error('Budget audit insert rollback error:', rollbackError)
+        }
         return NextResponse.json({ error: 'Failed to save.' }, { status: 500 })
       }
     }

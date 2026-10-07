@@ -85,7 +85,7 @@ export async function middleware(req: NextRequest) {
     pathname === '/api/onboard/answers' ||
     pathname === '/api/onboard/save' ||
     pathname === '/api/onboard/submit' ||
-    pathname === '/api/onboard/budget-audit' ||
+    pathname.startsWith('/api/onboard/budget-audit') ||
     pathname.startsWith('/api/onboard/team')
   ) {
     const session = await getClientPayload(req)
@@ -120,6 +120,7 @@ export const config = {
     '/api/onboard/save',
     '/api/onboard/submit',
     '/api/onboard/budget-audit',
+    '/api/onboard/budget-audit/:path*',
     '/api/onboard/team',
     '/api/onboard/team/:path*',
   ],
