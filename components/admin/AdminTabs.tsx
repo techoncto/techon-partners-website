@@ -39,12 +39,6 @@ export function AdminTabs({ active }: { active: AdminTab }) {
     }
     if (unsaved?.dirty && !window.confirm('You have unsaved questionnaire changes. Leave without saving?')) {
       event.preventDefault()
-      return
-    }
-    // Full load so the editor does not come back from the client navigation cache.
-    if (tab.id === 'questionnaire') {
-      event.preventDefault()
-      window.location.assign(tab.href)
     }
   }
 

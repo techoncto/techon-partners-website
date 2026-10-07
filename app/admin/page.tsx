@@ -2,9 +2,6 @@
 
 import { Suspense, useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { AdminHeader } from '@/components/admin/AdminHeader'
-import { AdminTabs } from '@/components/admin/AdminTabs'
-import { LoginScreen } from '@/components/admin/LoginScreen'
 import { formatAnswerValue } from '@/lib/onboard-emails'
 
 // ── Types ──────────────────────────────────────────────────────
@@ -940,43 +937,18 @@ function Dashboard() {
   function bump() { setRefreshKey(k => k + 1) }
 
   return (
-    <div className="min-h-screen bg-slate-100">
-      <AdminHeader />
+    <div className="mt-6 space-y-6">
+      <InvitePanel onInviteSent={bump} />
 
-      <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
-        <AdminTabs active={tab} />
-        <InvitePanel onInviteSent={bump} />
-
-        {tab === 'invitations' && <InvitationsTable refreshKey={refreshKey} />}
-        {tab === 'submissions' && <SubmissionsTable refreshKey={refreshKey} />}
-      </div>
+      {tab === 'invitations' && <InvitationsTable refreshKey={refreshKey} />}
+      {tab === 'submissions' && <SubmissionsTable refreshKey={refreshKey} />}
     </div>
   )
 }
 
-// ── Root export ────────────────────────────────────────────────
-
 export default function AdminPage() {
-  const [authed, setAuthed] = useState<boolean | null>(null)
-
-  useEffect(() => {
-    fetch('/api/admin/submissions')
-      .then(res => setAuthed(res.ok))
-      .catch(() => setAuthed(false))
-  }, [])
-
-  if (authed === null) {
-    return (
-      <div className="min-h-screen bg-slate-100 flex items-center justify-center">
-        <div className="text-slate-400 text-sm">Loading…</div>
-      </div>
-    )
-  }
-
-  if (!authed) return <LoginScreen onLogin={() => setAuthed(true)} />
-
   return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-100" />}>
+    <Suspense fallback={null}>
       <Dashboard />
     </Suspense>
   )

@@ -471,7 +471,7 @@ export function QuestionnaireEditor() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-6 pt-4 pb-8">
+    <div className="pt-4">
       <div className="sticky top-0 z-20 -mx-6 px-6 py-3 mb-6 bg-slate-100/95 backdrop-blur border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-sm text-slate-500">
